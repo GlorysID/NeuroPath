@@ -1,0 +1,23 @@
+.layoutContainer {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  position: relative;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 40px;
+  padding-bottom: 120px; /* Space for the floating dock */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    padding: 24px;
+    padding-bottom: 100px;
+  }
+}

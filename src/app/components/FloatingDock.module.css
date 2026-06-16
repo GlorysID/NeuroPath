@@ -1,0 +1,118 @@
+.dockContainer {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 16px;
+}
+
+.mainButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--text-main);
+  color: var(--bg-color);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1001;
+}
+
+.mainButton:hover {
+  transform: scale(1.05);
+}
+
+.mainButton:active {
+  transform: scale(0.95);
+}
+
+.menuIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.menuItems {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.menuItems.open {
+  pointer-events: auto;
+}
+
+.dockItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: var(--text-main);
+  background: rgba(20, 20, 22, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--surface-color-dark);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dockItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.dockItem.active {
+  background: var(--text-main);
+  color: var(--bg-color);
+}
+
+.dockIcon {
+  width: 20px;
+  height: 20px;
+  transition: all 0.2s ease;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  right: 60px; /* Appear to the left of the icon */
+  padding: 8px 12px;
+  background: rgba(10, 10, 12, 0.9);
+  backdrop-filter: blur(10px);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--surface-color-dark);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transform: translateX(10px);
+}
+
+.dockItem:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .dockContainer {
+    bottom: 24px;
+  }
+}

@@ -1,0 +1,46 @@
+.marqueeContainer {
+  width: 100%;
+  overflow: hidden;
+  padding: 40px 0;
+  display: flex;
+  white-space: nowrap;
+  position: relative;
+  z-index: 10;
+  border-top: 1px solid var(--surface-color-dark);
+  border-bottom: 1px solid var(--surface-color-dark);
+}
+
+.marqueeTrack {
+  display: flex;
+  animation: scroll 120s linear infinite;
+  width: max-content;
+}
+
+.marqueeItem {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700; /* Increased font weight slightly for better readability */
+  letter-spacing: 0.2em;
+  color: var(--text-main); /* Switched from text-muted to text-main for maximum contrast */
+  text-transform: uppercase;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  transition: var(--transition-smooth);
+}
+
+.marqueeItem:hover {
+  opacity: 0.7; /* Change hover effect since it's already text-main */
+}
+
+.separator {
+  color: var(--text-main);
+  opacity: 0.3;
+  font-size: 0.75rem;
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

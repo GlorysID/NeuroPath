@@ -1,0 +1,28 @@
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  background: var(--surface-color);
+  border: 1px solid var(--surface-color-dark);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.toggleBtn:hover {
+  background: var(--surface-color-dark);
+}
+
+.option {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  transition: var(--transition-smooth);
+}
+
+.active {
+  background: var(--text-main);
+  color: var(--bg-color);
+}

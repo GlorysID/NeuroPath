@@ -1,142 +1,726 @@
-.page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
+.main {
+  position: relative;
   display: flex;
-  flex: 1;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
-}
-
-.main {
-  display: flex;
-  flex: 1;
   width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
+  overflow-x: clip;
 }
 
-.intro {
+.navbar {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  padding: 32px 5%;
+  border-bottom: 1px solid var(--surface-color-dark);
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
   gap: 24px;
 }
 
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
+.logo {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
 }
 
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
+.loginBtn {
   font-weight: 500;
-  color: var(--text-primary);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  transition: var(--transition-smooth);
 }
 
-.ctas {
+.loginBtn:hover {
+  color: var(--text-main);
+}
+
+/* Hero Section */
+.hero {
   display: flex;
-  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
-  max-width: 440px;
-  gap: 16px;
-  font-size: 14px;
+  max-width: 1200px;
+  padding: 60px 5% 120px;
+  gap: 80px;
+  position: sticky;
+  top: 0;
+  z-index: 0;
+  min-height: 100vh;
+  background-color: var(--bg-color); /* CRITICAL: Gives mix-blend-mode a solid canvas to blend against, fixing the invisible text bug */
 }
 
-.ctas a {
+@keyframes floatBob {
+  0%, 100% {
+    transform: translateZ(0) translateY(0px);
+  }
+  50% {
+    transform: translateZ(0) translateY(-30px);
+  }
+}
+
+.heroBackgroundRobot {
+  position: absolute;
+  top: -20vh;
+  /* Push up to accommodate larger height */
+  left: -12vw;
+  /* Bleed off the left edge */
+  width: 90vw;
+  /* Massive width */
+  height: 150vh;
+  /* Massive height to scale up the contained image */
+  z-index: -1;
+  opacity: 0.9;
+  /* Increased opacity to make the robot darker, which mathematically forces the text to become pure white! */
+  pointer-events: none;
+  transition: opacity 0.5s ease, filter 0.5s ease;
+  user-select: none;
+  /* Hardware Acceleration Optimization to prevent scroll lag */
+  transform: translateZ(0);
+  will-change: opacity, filter, transform;
+  animation: floatBob 8s ease-in-out infinite;
+}
+
+/* Adjust visibility for dark mode */
+:global([data-theme='dark']) .heroBackgroundRobot {
+  opacity: 0.20;
+  /* Further increased opacity for dark mode */
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+}
+
+.heroContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  /* Removed z-index and mix-blend-mode to allow children to blend independently */
+}
+
+.title {
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  line-height: 1.05;
+  color: #ffffff; /* Must be white for difference blending to work */
+  mix-blend-mode: difference;
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #ffffff; /* Use white to maximize contrast during difference blending */
+  line-height: 1.7;
+  font-weight: 400; /* Thinner font weight for a cleaner, modern look */
+  mix-blend-mode: difference;
+}
+
+.ctaGroup {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.primaryCta {
+  background: var(--text-main);
+  color: var(--bg-color);
+  padding: 16px 32px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--text-main);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: var(--transition-smooth);
+}
+
+.primaryCta:hover {
+  background: var(--bg-color);
+  color: var(--text-main);
+}
+
+.secondaryCta {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  transition: var(--transition-smooth);
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+
+.secondaryCta:hover {
+  color: var(--text-main);
+  border-bottom-color: var(--text-main);
+}
+
+.heroVisual {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
-  cursor: pointer;
-  width: fit-content;
-  font-weight: 500;
+  position: relative;
+  min-height: 400px;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
+/* Voice Bubbles Inspiration from Neo-Mirai */
+.voiceBubble {
+  position: absolute;
+  background: var(--surface-color);
+  border: 1px solid var(--surface-color-dark);
+  padding: 12px 20px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  z-index: 3;
+  backdrop-filter: blur(10px);
+}
+
+.bubbleLeft {
+  top: 5%;
+  left: -10%;
+  border-bottom-right-radius: 4px;
+}
+
+.bubbleRight {
+  bottom: 20%;
+  right: -15%;
+  border-top-left-radius: 4px;
+  background: var(--text-main);
+  color: var(--bg-color);
+}
+
+/* Card Audio Wave */
+.audioWaveContainer {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 1rem;
+  height: 50px;
+  /* Crucial: fixed height so it doesn't push the elements below when animating */
+}
+
+.waveBar {
+  width: 4px;
+  background-color: var(--text-main);
+  border-radius: 2px;
+}
+
+/* Live Analysis UI (Fills the bottom of the card) */
+.liveAnalysisContainer {
+  margin-top: auto;
+  /* Pushes it to the bottom */
+  padding-top: 2rem;
+  border-top: 1px solid rgba(150, 150, 150, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.analysisHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.analysisBlinker {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #ff3b30;
+  animation: blink 1.5s infinite ease-in-out;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 4px rgba(255, 59, 48, 0.8);
+  }
+
+  50% {
+    opacity: 0.3;
+    box-shadow: none;
+  }
+}
+
+.traitTags {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
-a.secondary {
-  border-color: var(--button-secondary-border);
+.traitTag {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 100px;
+  background-color: var(--surface-color);
+  color: var(--text-main);
+  border: 1px solid rgba(150, 150, 150, 0.2);
 }
 
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
-  }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
-  }
+.scanningBox {
+  position: relative;
+  overflow: hidden;
+  padding: 10px;
+  background-color: var(--surface-color);
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border: 1px solid rgba(150, 150, 150, 0.1);
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
+.scanLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(90deg, transparent, rgba(150, 150, 150, 0.2), transparent);
+  transform: skewX(-20deg);
+}
+
+.mockupCard {
+  width: 100%;
+  max-width: 450px;
+  aspect-ratio: 3/4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px;
+  gap: 24px;
+  background: var(--bg-color);
+  border: 1px solid var(--surface-color-dark);
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.1);
+}
+
+.mockupLabel {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.mockupText {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--text-main);
+  line-height: 1.3;
+}
+
+.decorativeLine {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--surface-color-dark);
+  z-index: 1;
+}
+
+/* Content Wrapper to cover sticky hero */
+.contentWrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  background-color: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Edge-to-Edge Dark Sections */
+.sectionDark {
+  background-color: var(--text-main);
+  color: var(--bg-color);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.sectionDark .problemHeading,
+.sectionDark .problemDesc,
+.sectionDark .finalCtaTitle {
+  color: var(--bg-color);
+}
+
+.sectionDark .finalCtaBtn {
+  background: var(--bg-color);
+  color: var(--text-main);
+  border: 1px solid var(--bg-color);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: var(--transition-smooth);
+  padding: 16px 32px;
+  font-weight: 500;
+  display: inline-block;
+  border-radius: var(--radius-sm);
+}
+
+.sectionDark .finalCtaBtn:hover {
+  background: var(--text-main);
+  color: var(--bg-color);
+  border-color: var(--bg-color);
+}
+
+/* Problem Statement */
+.problemSection {
+  padding: 160px 5%;
+  text-align: center;
+  gap: 40px;
+}
+
+.problemHeading {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.2;
+  color: var(--text-main);
+  max-width: 1000px;
+}
+
+.problemDesc {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+/* Features Section */
+.features {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  padding: 160px 5%;
+  gap: 80px;
+}
+
+.featuresHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+}
+
+.featuresTitle {
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  color: var(--text-main);
+  font-family: var(--font-display);
+}
+
+.featuresSubtitle {
+  font-size: 1.125rem;
+  color: var(--text-muted);
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+  width: 100%;
+}
+
+.featureCard {
+  background: var(--bg-color);
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border-left: 1px solid var(--surface-color-dark);
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+  z-index: 1;
+}
+
+.featureCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--surface-color);
+  transform: translateY(100%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: -1;
+}
+
+.featureCard:hover::before {
+  transform: translateY(0);
+}
+
+.featureCard:hover {
+  border-color: var(--text-main);
+}
+
+.featureNumber {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: var(--transition-smooth);
+}
+
+.featureCard:hover .featureNumber {
+  color: var(--text-main);
+}
+
+.featureName {
+  font-size: 1.5rem;
+  color: var(--text-main);
+  font-family: var(--font-display);
+}
+
+.featureDesc {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Testimonials Section */
+.testimonials {
+  width: 100%;
+  padding: 160px 5%;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--surface-color-dark);
+  border-bottom: 1px solid var(--surface-color-dark);
+}
+
+.testimonialContent {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  align-items: center;
+  text-align: center;
+}
+
+.testimonialTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--text-main);
+  line-height: 1.3;
+  font-style: italic;
+}
+
+.authorGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.authorAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--text-main);
+  color: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.authorName {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.authorRole {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* FAQ Section */
+.faq {
+  width: 100%;
+  max-width: 800px;
+  padding: 160px 5%;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+.faqHeader {
+  text-align: center;
+}
+
+.faqTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  color: var(--text-main);
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+}
+
+.faqItem {
+  padding: 32px 0;
+  border-bottom: 1px solid var(--surface-color-dark);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.faqItem:first-child {
+  border-top: 1px solid var(--surface-color-dark);
+}
+
+.faqQuestion {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text-main);
+}
+
+.faqAnswer {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+/* Final CTA Section */
+.finalCta {
+  padding: 160px 5%;
+  text-align: center;
+  gap: 40px;
+}
+
+.finalCtaTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  line-height: 1.1;
+  max-width: 800px;
+}
+
+.finalCtaBtn {
+  padding: 20px 48px;
+  font-weight: 500;
+  font-size: 1.1rem;
+  transition: var(--transition-smooth);
+}
+
+/* Footer */
+.footer {
+  width: 100%;
+  padding: 64px 5%;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--surface-color-dark);
+}
+
+.footerInner {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.footerBrand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footerLogo {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.footerTagline {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.footerLinks {
+  display: flex;
+  gap: 32px;
+}
+
+.footerLink {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  transition: var(--transition-smooth);
+}
+
+.footerLink:hover {
+  color: var(--text-main);
+}
+
+@media (max-width: 900px) {
+  .hero {
+    flex-direction: column;
+    margin-top: 40px;
+    gap: 60px;
+    padding-top: 40px;
   }
 
-  .intro {
+  .heroContent {
+    align-items: flex-start;
+  }
+
+  .bubbleLeft {
+    top: -20px;
+    left: 10px;
+  }
+
+  .bubbleRight {
+    bottom: -20px;
+    right: 10px;
+  }
+
+  .mockupCard {
+    aspect-ratio: auto;
+    padding: 32px;
+  }
+
+  .decorativeLine {
+    display: none;
+  }
+
+  .footerInner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footerLinks {
+    flex-direction: column;
     gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
-  }
-
-  .page {
-    --background: #000;
-    --foreground: #000;
-
-    --text-primary: #ededed;
-    --text-secondary: #999;
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
   }
 }

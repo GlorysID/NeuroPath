@@ -1,0 +1,121 @@
+.container {
+  width: 100%;
+  padding: 160px 5%;
+  background-color: var(--bg-color);
+  position: relative;
+  z-index: 5;
+  border-top: 1px solid var(--surface-color-dark);
+  /* REMOVED overflow: hidden; as it breaks position: sticky! */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 40px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.sideContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 80px;
+  padding: 80px 0;
+  z-index: 2; /* Keep text above expanded canvas */
+  position: relative;
+}
+
+.rightAlign {
+  text-align: right;
+}
+
+.infoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  pointer-events: auto; /* Re-enable pointer events for text */
+}
+
+.infoCard h3 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--surface-color-dark);
+  padding-bottom: 16px;
+}
+
+.infoCard p {
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.centerCanvas {
+  position: relative;
+  /* We make the container tall so the user scrolls past it, allowing the sticky element to rotate */
+  height: 1200px; 
+  min-width: 0; /* CRITICAL: Prevents CSS grid blowout when child has width > 100% */
+  width: 100%;
+}
+
+.stickyWrapper {
+  position: sticky;
+  top: -10vh; /* Start slightly above the viewport */
+  height: 120vh; /* Massive vertical space to prevent clipping */
+  width: 100vw; /* Perfect edge-to-edge screen width */
+  margin-left: calc(-50vw + 50%); /* Mathematical perfect centering for 100vw inside a container */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Let clicks pass through to text underneath */
+  z-index: 0;
+  
+  /* Smoothly fade out the top and bottom edges so the robot doesn't look cut off */
+  mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+
+/* Add a beautiful ambient glow behind the robot */
+.stickyWrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60vw;
+  height: 60vw;
+  background: radial-gradient(circle at center, var(--glow-color) 0%, transparent 65%);
+  filter: blur(40px);
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@media (max-width: 1000px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 60px;
+  }
+  
+  .rightAlign {
+    text-align: left;
+  }
+  
+  .centerCanvas {
+    height: 500px;
+    order: -1;
+  }
+  
+  .stickyWrapper {
+    position: relative;
+    top: 0;
+    height: 100%;
+  }
+  
+  .sideContent {
+    padding: 0;
+    gap: 40px;
+  }
+}
