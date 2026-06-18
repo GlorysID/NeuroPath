@@ -31,6 +31,10 @@
   --radius-pill: 9999px;
 
   --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Utility Variables */
+  --dock-bg: rgba(255, 255, 255, 0.8);
+  --dock-bg-hover: rgba(0, 0, 0, 0.05);
+  --dock-tooltip-bg: rgba(255, 255, 255, 0.9);
 }
 
 [data-theme='dark'] {
@@ -40,7 +44,6 @@
   --surface-color: #111111;
   --surface-color-dark: #222222;
   --glow-color: rgba(0, 229, 255, 0.25);
-  /* Slightly increased dark mode glow */
   
   /* Interview HUD Variables */
   --hud-gradient: linear-gradient(135deg, #ffffff 0%, #b0b0b0 100%);
@@ -53,6 +56,11 @@
   --hud-shadow-focus: 0 20px 60px rgba(0, 229, 255, 0.2), inset 0 2px 25px rgba(0,229,255,0.15);
   --hud-placeholder: rgba(255, 255, 255, 0.6);
   --hud-mask: linear-gradient(to bottom, transparent 0%, black 15%, black 100%);
+
+  /* Utility Variables */
+  --dock-bg: rgba(20, 20, 22, 0.8);
+  --dock-bg-hover: rgba(255, 255, 255, 0.1);
+  --dock-tooltip-bg: rgba(10, 10, 12, 0.9);
 }
 
 @media (pointer: fine) {

@@ -120,10 +120,75 @@
 
 /* Sleek Holographic Input Area */
 .inputArea {
+  animation: slideIn 0.8s ease-out forwards;
+  position: relative;
   width: 100%;
   max-width: 850px;
-  position: relative;
   pointer-events: auto;
+}
+
+/* Vertical Progress Bar Animations (Elegant Minimalist) */
+.progressBarContainer {
+  position: fixed;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 50vh;
+  display: flex;
+  flex-direction: row; /* Track on right, label on left */
+  align-items: center;
+  gap: 15px;
+  pointer-events: auto;
+  z-index: 100;
+}
+
+.progressLabel {
+  writing-mode: vertical-rl;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between text and percentage */
+  transform: rotate(180deg);
+}
+
+.progressTrack {
+  width: 2px;
+  height: 100%;
+  background: var(--surface-color-dark);
+  position: relative;
+}
+
+.progressFill {
+  width: 100%;
+  background: var(--text-main);
+  transition: height 1s cubic-bezier(0.22, 1, 0.36, 1);
+  position: absolute;
+  bottom: 0;
+}
+
+/* Subtle elegant sheen */
+.progressFill::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: 0;
+  height: 40px;
+  background: linear-gradient(0deg, transparent, var(--bg-color), transparent);
+  opacity: 0.6;
+  animation: shineVert 2.5s ease-out infinite;
+}
+
+@keyframes shineVert {
+  0% { transform: translateY(20px); opacity: 0; }
+  20% { opacity: 1; }
+  80% { transform: translateY(-400px); opacity: 0; }
+  100% { transform: translateY(-500px); opacity: 0; }
 }
 
 .interimText {

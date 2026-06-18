@@ -59,7 +59,7 @@
   height: 48px;
   border-radius: 50%;
   color: var(--text-main);
-  background: rgba(20, 20, 22, 0.8);
+  background: var(--dock-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--surface-color-dark);
@@ -69,7 +69,7 @@
 }
 
 .dockItem:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--dock-bg-hover);
   transform: scale(1.1);
 }
 
@@ -84,12 +84,11 @@
   transition: all 0.2s ease;
 }
 
-/* Tooltip */
 .tooltip {
   position: absolute;
   right: 60px; /* Appear to the left of the icon */
   padding: 8px 12px;
-  background: rgba(10, 10, 12, 0.9);
+  background: var(--dock-tooltip-bg);
   backdrop-filter: blur(10px);
   color: var(--text-main);
   font-size: 0.8rem;

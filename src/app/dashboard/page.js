@@ -3,142 +3,173 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot, setDoc } from "firebase/firestore";
 import { auth, db } from "../../lib/firebase";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import LanguageToggle from "../components/LanguageToggle";
 import ThemeToggle from "../components/ThemeToggle";
-import TiltCard from "../components/TiltCard";
-import SkillTreeRoadmap from "../components/SkillTreeRoadmap";
+import RadarChart from "../components/RadarChart";
+import ProgressionStepper from "../components/ProgressionStepper";
+import SkillBadge from "../components/SkillBadge";
 import styles from "./page.module.css";
-
-import CognitiveCore3D from "../components/CognitiveCore3D";
-
-// Helper component for animated numbers
-function AnimatedCounter({ value }) {
-  const [count, setCount] = useState(0);
-  
-  useEffect(() => {
-    let start = 0;
-    const end = parseInt(value, 10) || 0;
-    if (start === end) return;
-    
-    let totalDuration = 2000;
-    let incrementTime = (totalDuration / end) * 1.5;
-    
-    const timer = setInterval(() => {
-      start += 1;
-      setCount(start);
-      if (start === end) clearInterval(timer);
-    }, incrementTime);
-    
-    return () => clearInterval(timer);
-  }, [value]);
-  
-  return <>{count}</>;
-}
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [hasRoadmap, setHasRoadmap] = useState(false); 
+  const [hasRoadmap, setHasRoadmap] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [interviewState, setInterviewState] = useState(null);
+  const [credentials, setCredentials] = useState([]);
   const [feed, setFeed] = useState("");
-  const [agentResult, setAgentResult] = useState("");
-  const [isAgentLoading, setIsAgentLoading] = useState(false);
+
+  // Modal states
+  const [modalType, setModalType] = useState(null); // 'portfolio' | 'jobs' | null
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+
   const router = useRouter();
   const { lang } = useLanguage();
 
   const t = {
     welcome: lang === 'id' ? "Selamat datang kembali," : "Welcome back,",
     subtitle: lang === 'id' ? "Berikut adalah tinjauan kognitif dan rencana aksi Anda." : "Here is your cognitive overview and action plan.",
-    profile: lang === 'id' ? "Profil Kognitif" : "Cognitive Profile",
-    analytical: lang === 'id' ? "Pemikiran Analitis" : "Analytical Thinking",
-    creative: lang === 'id' ? "Pemecahan Masalah Kreatif" : "Creative Problem Solving",
     archetypeLabel: lang === 'id' ? "Arketipe Utama" : "Primary Archetype",
-    archetypeValue: lang === 'id' ? "Arsitek Sistem" : "System Architect",
-    matched: lang === 'id' ? "Cocok" : "Matched",
+    radarTitle: lang === 'id' ? "Peta Kognitif" : "Cognitive Map",
     actions: lang === 'id' ? "Aksi Cepat" : "Quick Actions",
-    refine: lang === 'id' ? "Sempurnakan Jalur Anda" : "Refine Your Path",
-    refineDesc: lang === 'id' ? "Ikuti wawancara AI lagi untuk mengkalibrasi ulang peta jalan Anda berdasarkan keterampilan baru." : "Take another AI interview to recalibrate your roadmap based on new skills.",
-    startBtn: lang === 'id' ? "Mulai Sesi" : "Start Session",
+    viewRoadmap: lang === 'id' ? "Lihat Peta Jalan Karir" : "View Career Roadmap",
+    genPortfolio: lang === 'id' ? "Generate Portfolio" : "Generate Portfolio",
+    findJobs: lang === 'id' ? "Cari Pekerjaan via AI" : "Find AI-Matched Jobs",
+    liveAi: lang === 'id' ? "Agen AI Langsung" : "Live AI Agent",
+    analyzing: lang === 'id' ? "Menganalisis lintasan baru untuk pengguna..." : "Analyzing new trajectory for user...",
     noData: lang === 'id' ? "Tidak Ada Data Terdeteksi" : "No Data Detected",
     noDataDesc: lang === 'id' ? "Anda belum menyelesaikan sesi pemetaan saraf Anda. AI kami perlu menganalisis suara Anda untuk menghasilkan peta jalan yang dipersonalisasi." : "You haven't completed your neural mapping session yet. Our AI needs to analyze your voice to generate a personalized roadmap.",
     initiateBtn: lang === 'id' ? "Mulai Pemindaian" : "Initiate Scan",
-    agenticActions: lang === 'id' ? "Aksi Agen" : "Agentic Actions",
-    autoResume: lang === 'id' ? "Buat Resume Otomatis" : "Auto-Generate Resume",
-    findJobs: lang === 'id' ? "Cari Pekerjaan Relevan" : "Find Relevant Jobs",
-    verifyBlock: lang === 'id' ? "Verifikasi di Blockchain" : "Verify on Blockchain",
-    nextObj: lang === 'id' ? "Tujuan Selanjutnya" : "Next Objective",
-    nextObjDesc: lang === 'id' ? "Berdasarkan profil kognitif Anda, AI merekomendasikan sesi wawancara spesialisasi ini untuk membuka kemampuan tingkat lanjut Anda." : "Based on your cognitive profile, the AI recommends taking this specialized interview to further map your capabilities and unlock advanced action plans.",
-    initiateSeq: lang === 'id' ? "Mulai Urutan" : "Initiate Sequence",
-    liveAi: lang === 'id' ? "Agen AI Langsung" : "Live AI Agent",
-    analyzing: lang === 'id' ? "Menganalisis lintasan baru untuk pengguna..." : "Analyzing new trajectory for user...",
-    agentOutput: lang === 'id' ? "Keluaran Agen OpenClaw" : "OpenClaw Agent Output",
     generating: lang === 'id' ? "Menganalisis dan merumuskan..." : "Generating targeted outputs...",
-    acknowledge: lang === 'id' ? "Mengerti" : "Acknowledge",
+    close: lang === 'id' ? "Tutup" : "Close",
+    openLinkedin: lang === 'id' ? "Buka di LinkedIn" : "Open on LinkedIn",
+    apply: lang === 'id' ? "Lamar" : "Apply",
+    portfolioTitle: lang === 'id' ? "Portfolio Anda" : "Your Portfolio",
+    jobsTitle: lang === 'id' ? "Pekerjaan yang Cocok" : "Matched Jobs",
+    recommended: lang === 'id' ? "Rekomendasi AI" : "AI Recommended",
+    liveListings: lang === 'id' ? "Lowongan Aktif" : "Live Listings",
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    let unsubscribeSnapshot = null;
+    
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        try {
-          const docRef = doc(db, "users", currentUser.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists() && docSnap.data().profile) {
-            setProfile(docSnap.data().profile);
-            setHasRoadmap(true);
+        
+        // Listen to the document in real-time to bypass any stale caches
+        const docRef = doc(db, "users", currentUser.uid);
+        unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.profile) {
+              setProfile(data.profile);
+              setHasRoadmap(true);
+            }
+            if (data.interviewState) {
+              setInterviewState(data.interviewState);
+            }
+            if (data.credentials) {
+              setCredentials(data.credentials);
+            }
+            if (data.aiFeed) {
+              setFeed(data.aiFeed);
+            }
           } else {
             setHasRoadmap(false);
           }
-        } catch (error) {
-          console.error("Error fetching profile:", error);
-        }
+          setLoading(false);
+        }, (error) => {
+          console.error("Error fetching profile snapshot:", error);
+          setLoading(false);
+        });
       } else {
         router.push("/login");
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+    };
   }, [router]);
 
+  // Live AI feed
   useEffect(() => {
-    if (profile && !feed) {
-      // Fetch live AI feed
+    // Only fetch if profile exists, feed is empty, and we have a user
+    if (profile && !feed && user) {
       fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "feed", profile, lang })
-      }).then(res => res.json()).then(data => {
-        if (data.result) setFeed(data.result);
+      }).then(res => res.json()).then(async data => {
+        if (data.result) {
+          setFeed(data.result);
+          // Cache the feed permanently in Firestore to save Groq tokens
+          try {
+            await setDoc(doc(db, "users", user.uid), { aiFeed: data.result }, { merge: true });
+          } catch (e) {
+            console.error("Failed to cache feed:", e);
+          }
+        }
       }).catch(console.error);
     }
-  }, [profile, lang, feed]);
+  }, [profile, lang, feed, user]);
 
-  const handleAgentAction = async (actionType) => {
-    if (actionType === 'verify') {
-      setAgentResult(lang === 'id' ? "Verifikasi Blockchain disimulasikan. Smart contract dipanggil: 0x98f...a1c" : "Blockchain verification simulated. Smart contract pinged: 0x98f...a1c");
-      return;
+  // Portfolio action
+  const handlePortfolio = async () => {
+    setModalType("portfolio");
+    setModalLoading(true);
+    setModalContent(null);
+    try {
+      const res = await fetch("/api/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile, lang })
+      });
+      const data = await res.json();
+      setModalContent({ text: data.result });
+    } catch (e) {
+      setModalContent({ text: "Failed to generate portfolio." });
     }
-    
-    setIsAgentLoading(true);
-    setAgentResult("");
+    setModalLoading(false);
+  };
+
+  // Jobs action
+  const handleJobs = async () => {
+    setModalType("jobs");
+    setModalLoading(true);
+    setModalContent(null);
     try {
       const res = await fetch("/api/agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: actionType, profile, lang })
+        body: JSON.stringify({ action: "jobs", profile, lang })
       });
       const data = await res.json();
-      if (data.result) setAgentResult(data.result);
+      setModalContent({
+        analysis: data.result,
+        jobTitles: data.jobTitles || [],
+        reasoning: data.reasoning || [],
+        linkedinUrl: data.linkedinUrl || "",
+        listings: data.listings || []
+      });
     } catch (e) {
-      setAgentResult("Agent connection failed.");
+      setModalContent({ analysis: "Failed to find jobs." });
     }
-    setIsAgentLoading(false);
+    setModalLoading(false);
+  };
+
+  const closeModal = () => {
+    setModalType(null);
+    setModalContent(null);
   };
 
   if (loading) {
@@ -154,6 +185,15 @@ export default function Dashboard() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
   };
 
+  const radarScores = profile ? {
+    communication: profile.communicationScore || 50,
+    technical: profile.technicalScore || profile.analyticalScore || 50,
+    logic: profile.logicScore || profile.analyticalScore || 50,
+    creativity: profile.creativityScore || profile.creativeScore || 50,
+    leadership: profile.leadershipScore || 30,
+    adaptability: profile.adaptabilityScore || 40,
+  } : {};
+
   return (
     <div className={styles.dashboardWrapper}>
       <header className={styles.header}>
@@ -163,7 +203,7 @@ export default function Dashboard() {
           </h1>
           <p className={styles.subtitle}>{t.subtitle}</p>
         </motion.div>
-        
+
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
           <ThemeToggle />
           <LanguageToggle />
@@ -172,8 +212,8 @@ export default function Dashboard() {
 
       {hasRoadmap ? (
         <div className={styles.bentoGrid}>
-          {/* Hero Card (Span 3) */}
-          <motion.div 
+          {/* Row 1: Hero Card (Span 3) */}
+          <motion.div
             className={styles.bentoHero}
             initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.1 }}
           >
@@ -183,108 +223,41 @@ export default function Dashboard() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '300px', lineHeight: '1.6' }}>
-                Your cognitive profile has been analyzed. Use your archetype to guide your career decisions and skill development.
+                {profile?.readinessLevel || 'Unknown'} · {lang === 'id' ? 'Peta kognitif Anda telah dianalisis.' : 'Your cognitive map has been analyzed.'}
               </p>
             </div>
           </motion.div>
 
-          {/* Analytical Score Card */}
-          <motion.div 
-            className={styles.bentoCard}
+          {/* Row 2: RadarChart (Span 2) + Live Feed (Span 1) */}
+          <motion.div
+            className={`${styles.bentoCard} ${styles.span2}`}
+            style={{ height: '420px' }}
             initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.2 }}
           >
-            <div className={styles.cardHeader}>{t.analytical}</div>
-            <div style={{ marginTop: 'auto' }}>
-              <div className={styles.statValue}><AnimatedCounter value={profile?.analyticalScore || 0} />%</div>
-              <div className={styles.progressBar}>
-                <motion.div className={styles.progressFill} 
-                  initial={{ width: 0 }} whileInView={{ width: `${profile?.analyticalScore || 0}%` }} transition={{ duration: 1.5, delay: 0.5 }} 
-                />
-              </div>
-            </div>
+            <div className={styles.cardHeader}>{t.radarTitle}</div>
+            <RadarChart scores={radarScores} />
           </motion.div>
 
-          {/* Creative Score Card */}
-          <motion.div 
+          <motion.div
             className={styles.bentoCard}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.3 }}
-          >
-            <div className={styles.cardHeader}>{t.creative}</div>
-            <div style={{ marginTop: 'auto' }}>
-              <div className={styles.statValue}><AnimatedCounter value={profile?.creativeScore || 0} />%</div>
-              <div className={styles.progressBar}>
-                <motion.div className={styles.progressFill} 
-                  initial={{ width: 0 }} whileInView={{ width: `${profile?.creativeScore || 0}%` }} transition={{ duration: 1.5, delay: 0.7 }} 
-                />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Agentic Action Card */}
-          <motion.div 
-            className={styles.bentoCard}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.4 }}
-          >
-            <div className={styles.cardHeader}>{t.agenticActions}</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-              <button 
-                onClick={() => handleAgentAction('resume')}
-                className={styles.secondaryBtn}
-              >
-                {t.autoResume}
-              </button>
-              <button 
-                onClick={() => handleAgentAction('jobs')}
-                className={styles.secondaryBtn}
-              >
-                {t.findJobs}
-              </button>
-              <button 
-                onClick={() => handleAgentAction('verify')}
-                className={styles.secondaryBtn}
-              >
-                {t.verifyBlock}
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Progressive Interview Path (Span 2) */}
-          <motion.div 
-            className={`${styles.bentoCard} ${styles.span2}`} style={{ gridColumn: 'span 2' }}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.5 }}
-          >
-            <div className={styles.cardHeader}>{t.nextObj}</div>
-            <h3 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-display)', marginBottom: '8px' }}>
-              {profile?.nextInterviewType || "Technical Deep Dive"}
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px', lineHeight: '1.6', maxWidth: '80%' }}>
-              {t.nextObjDesc}
-            </p>
-            <div style={{ display: 'flex', gap: '16px', marginTop: 'auto' }}>
-              <Link href={`/interview?type=${encodeURIComponent(profile?.nextInterviewType || 'Deep Dive')}`} className={styles.primaryBtn} style={{ width: 'auto' }}>
-                {t.initiateSeq}
-              </Link>
-            </div>
-          </motion.div>
-
-          {/* AI Activity Feed (Span 1) */}
-          <motion.div 
-            className={styles.bentoCard} style={{ gridColumn: 'span 1', background: 'var(--surface-color-dark)', display: 'flex', flexDirection: 'column' }}
+            style={{ background: 'var(--surface-color-dark)', display: 'flex', flexDirection: 'column', height: '420px' }}
             initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.6 }}
           >
             <div className={styles.cardHeader} style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-main)', animation: 'pulse 2s infinite' }} />
-              {t.liveAi}
+              {t.liveAi || t.liveAgent}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px', flex: 1 }}>
+            <div className={styles.feedContainer} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px', flex: 1, maxHeight: 'none', height: '100%', overflowY: 'hidden' }}>
               {feed ? (
-                <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', overflowY: 'auto', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)' }}>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                    {feed}
-                  </p>
+                <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)', flex: 1, overflowY: 'auto' }}>
+                  {feed.split('\n\n').map((para, i) => (
+                    <p key={i} style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
+                      {para}
+                    </p>
+                  ))}
                 </div>
               ) : (
-                <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)' }}>
+                <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', flex: 1 }}>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
                     {t.analyzing}
                   </p>
@@ -292,13 +265,65 @@ export default function Dashboard() {
               )}
             </div>
           </motion.div>
+
+          {/* Row 3: Actions (Span 1) + ProgressionStepper (Span 1) + SkillBadge (Span 1) */}
+          <motion.div
+            className={styles.bentoCard}
+            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.4 }}
+          >
+            <div className={styles.cardHeader}>{t.actions}</div>
+            <div className={styles.actionStack}>
+              <Link href="/dashboard/roadmap" className={styles.actionBtn}>
+                <span className={styles.actionIcon}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                </span>
+                <span>{t.viewRoadmap}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </Link>
+              <button onClick={handlePortfolio} className={styles.actionBtn}>
+                <span className={styles.actionIcon}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                </span>
+                <span>{t.genPortfolio}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+              <button onClick={handleJobs} className={styles.actionBtn}>
+                <span className={styles.actionIcon}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
+                <span>{t.findJobs}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </motion.div>
+
+          <motion.div
+            className={styles.bentoCard}
+            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.3 }}
+          >
+            <ProgressionStepper interviewState={interviewState || {}} />
+          </motion.div>
+
+          <motion.div
+            className={`${styles.bentoCard} ${styles.badgeCard}`}
+            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.5 }}
+          >
+            <SkillBadge
+              archetype={profile?.archetype || 'Uncalibrated'}
+              currentPhase={interviewState?.currentState || 'PROFILING'}
+              interviewState={interviewState || {}}
+              credentials={credentials}
+              userId={user?.uid}
+              hasRoadmap={hasRoadmap}
+            />
+          </motion.div>
         </div>
       ) : (
-        <motion.section 
+        <motion.section
           className={styles.emptyState}
           initial="hidden" animate="visible" variants={fadeUp}
         >
-          <div className={styles.emptyIcon}>
+          <div className={styles.emptyStateIcon}>
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
@@ -309,38 +334,94 @@ export default function Dashboard() {
         </motion.section>
       )}
 
-      {/* Agent Modal Overlay */}
-      {(isAgentLoading || agentResult) && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-          background: 'rgba(0,0,0,0.8)', zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div style={{
-            background: 'var(--bg-color)', padding: '32px', borderRadius: '16px',
-            border: '1px solid var(--surface-color-dark)', width: '90%', maxWidth: '600px',
-            maxHeight: '80vh', overflowY: 'auto'
-          }}>
-            <h3 style={{ marginBottom: '16px', fontFamily: 'var(--font-display)', color: 'var(--text-main)' }}>{t.agentOutput}</h3>
-            {isAgentLoading ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div className={styles.spinner} style={{ width: '20px', height: '20px', borderWidth: '2px' }} />
+      {/* === MODAL OVERLAY === */}
+      {modalType && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <motion.div
+            className={styles.modal}
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className={styles.modalHeader}>
+              <h3>{modalType === 'portfolio' ? t.portfolioTitle : t.jobsTitle}</h3>
+              <button onClick={closeModal} className={styles.modalClose}>✕</button>
+            </div>
+
+            {modalLoading ? (
+              <div className={styles.modalLoading}>
+                <div className={styles.spinner} style={{ width: '24px', height: '24px', borderWidth: '2px' }} />
                 <p>{t.generating}</p>
               </div>
+            ) : modalType === 'portfolio' ? (
+              /* PORTFOLIO MODAL */
+              <div className={styles.modalBody}>
+                <pre className={styles.portfolioText}>{modalContent?.text}</pre>
+              </div>
             ) : (
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                {agentResult}
+              /* JOBS MODAL */
+              <div className={styles.modalBody}>
+                {/* AI Analysis */}
+                <p className={styles.jobAnalysis}>{modalContent?.analysis}</p>
+
+                {/* AI Recommended Titles */}
+                {modalContent?.jobTitles?.length > 0 && (
+                  <div className={styles.jobSection}>
+                    <h4 className={styles.jobSectionTitle}>{t.recommended}</h4>
+                    {modalContent.jobTitles.map((title, i) => (
+                      <div key={i} className={styles.jobRecommendation}>
+                        <span className={styles.jobTitleText}>{title}</span>
+                        {modalContent.reasoning?.[i] && (
+                          <span className={styles.jobReason}>{modalContent.reasoning[i]}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Live Listings from JSearch or Fallback */}
+                {modalContent?.listings?.length > 0 ? (
+                  <div className={styles.jobSection}>
+                    <h4 className={styles.jobSectionTitle}>{t.liveListings}</h4>
+                    {modalContent.listings.map((job, i) => (
+                      <div key={i} className={styles.jobListing}>
+                        <div>
+                          <span className={styles.jobListingTitle}>{job.title}</span>
+                          <span className={styles.jobListingMeta}>{job.company} · {job.location}</span>
+                        </div>
+                        <a href={job.url} target="_blank" rel="noopener noreferrer" className={styles.applyBtn}>
+                          {t.apply} →
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.jobSection} style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                    <h4 className={styles.jobSectionTitle} style={{ marginBottom: '8px', color: 'var(--text-main)' }}>{lang === 'id' ? 'Peluang Karir Tersirat' : 'Implied Opportunities'}</h4>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                      {lang === 'id' 
+                        ? 'Saat ini belum ada lowongan dengan judul persis di database langsung kami. Namun jangan khawatir! AI telah merangkai tautan pencarian LinkedIn khusus berdasarkan kata kunci keahlian (skill) Anda di bawah ini.'
+                        : 'There are no exact title matches in our live database right now. Don\'t worry! The AI has constructed a specialized LinkedIn search link based on your core skill keywords below.'}
+                    </p>
+                  </div>
+                )}
+
+                {/* LinkedIn Button */}
+                {modalContent?.linkedinUrl && (
+                  <a
+                    href={modalContent.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.linkedinBtn}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    {t.openLinkedin}
+                  </a>
+                )}
               </div>
             )}
-            {!isAgentLoading && (
-              <button 
-                onClick={() => setAgentResult("")}
-                className={styles.primaryBtn} style={{ marginTop: '24px', width: 'auto' }}
-              >
-                {t.acknowledge}
-              </button>
-            )}
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

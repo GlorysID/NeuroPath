@@ -1,0 +1,276 @@
+.badge {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.unlocked {
+  background: linear-gradient(135deg, var(--surface-color) 0%, var(--surface-color-dark) 100%);
+  border: 1px solid var(--surface-color-dark);
+}
+
+.locked {
+  background: var(--surface-color);
+  border: 1px dashed var(--surface-color-dark);
+}
+
+/* Holographic overlay */
+.holographic {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 55%,
+    transparent 70%
+  );
+  animation: holographicShine 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes holographicShine {
+  0% { transform: translateX(-30%); }
+  50% { transform: translateX(30%); }
+  100% { transform: translateX(-30%); }
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.statusUnlocked {
+  font-size: 0.7rem;
+  color: var(--text-main);
+  background: var(--bg-color);
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-weight: 500;
+}
+
+.statusLocked {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.badgeTitle {
+  font-size: 1.4rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.locked .badgeTitle {
+  opacity: 0.4;
+  filter: blur(1px);
+}
+
+.hashContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.hashLabel {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hash {
+  font-size: 0.75rem;
+  color: var(--text-main);
+  opacity: 0.7;
+  font-family: monospace;
+  background: var(--bg-color);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.mintBtn {
+  padding: 12px 20px;
+  background: var(--text-main);
+  color: var(--bg-color);
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  margin-top: auto;
+  text-align: center;
+}
+
+.mintBtn:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
+}
+
+.mintBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.blurOverlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  padding: 16px;
+  opacity: 0.3;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.certModal {
+  background: linear-gradient(145deg, #161618 0%, #1a1a1c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 900px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  position: relative;
+  font-family: var(--font-sans);
+}
+
+.certHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.certLogo {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.05em;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.closeBtn:hover {
+  color: var(--text-main);
+}
+
+.certBody {
+  padding: 40px 32px;
+}
+
+.certSubtitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.certTitle {
+  font-size: 1.8rem;
+  font-family: var(--font-display);
+  color: var(--text-main);
+  margin-bottom: 32px;
+  line-height: 1.2;
+}
+
+.certDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.detailRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detailLabel {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.detailValue {
+  font-size: 0.95rem;
+  color: var(--text-main);
+  font-family: monospace;
+}
+
+.certFooter {
+  padding: 24px 32px;
+  background: rgba(0, 255, 157, 0.03);
+  border-top: 1px solid rgba(0, 255, 157, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.verifiedStamp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #00ff9d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}

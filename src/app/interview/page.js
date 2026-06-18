@@ -125,13 +125,14 @@ function HumanoidModel({ state }) {
   );
 }
 
-export default function InterviewRoom() {
+function InterviewRoom() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const interviewType = searchParams.get('type') || '';
   const { lang } = useLanguage();
   const [state, setState] = useState("initializing"); // initializing, speaking, listening, analyzing, extracting, complete
   const [transcript, setTranscript] = useState([]);
+  const [progressPercent, setProgressPercent] = useState(0);
   const [inputValue, setInputValue] = useState("");
   const transcriptRef = useRef(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -140,6 +141,15 @@ export default function InterviewRoom() {
   const silenceTimerRef = useRef(null);
   const submitBtnRef = useRef(null);
   const utteranceRef = useRef(null); // Fix Chrome GC bug for long speeches
+  
+  // Voice vs Text Mode
+  const [interactionMode, setInteractionMode] = useState("voice"); // "voice" | "text"
+  const modeRef = useRef("voice");
+  useEffect(() => { modeRef.current = interactionMode; }, [interactionMode]);
+  
+  // Create a persistent session ID for guests
+  const [sessionId] = useState(() => "guest_" + Math.random().toString(36).substring(2, 11));
+  const getUserId = () => auth.currentUser ? auth.currentUser.uid : sessionId;
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -152,36 +162,59 @@ export default function InterviewRoom() {
       setState("listening"); // Fallback if TTS not supported
       return;
     }
-    
-    window.speechSynthesis.cancel(); // Stop any ongoing speech
-    
-    utteranceRef.current = new SpeechSynthesisUtterance(text);
-    const availableVoices = window.speechSynthesis.getVoices();
-    const targetPrefix = lang === 'id' ? 'id' : 'en';
-    const langVoices = availableVoices.filter(v => v.lang.toLowerCase().startsWith(targetPrefix));
-    
-    // Prioritize high quality neural/online voices
-    let bestVoice = langVoices.find(v => v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('natural')) || 
-                    langVoices.find(v => v.name.toLowerCase().includes('google')) ||
-                    langVoices[0];
-                    
-    if (bestVoice) utteranceRef.current.voice = bestVoice;
-    utteranceRef.current.rate = 1.0;
-    utteranceRef.current.pitch = 1.0;
-    
-    utteranceRef.current.onstart = () => setState("speaking");
-    utteranceRef.current.onend = () => {
-      setState("idle"); // Stop 3D animation immediately
-      // Wait 1.5s to ensure speaker reverb is fully dead before opening mic
-      setTimeout(() => {
-        setInputValue("");
-        setInterimText("");
-        setState("listening");
-      }, 1500); 
-    };
-    utteranceRef.current.onerror = () => setState("listening");
 
-    window.speechSynthesis.speak(utteranceRef.current);
+    // Text-to-speech runs in BOTH voice and text mode. 
+    // The mode only affects whether the user's microphone turns on afterwards.
+    
+    // Debounce to prevent multiple rapid triggers (e.g. from React Strict Mode)
+    if (window.speakTimeout) clearTimeout(window.speakTimeout);
+    
+    window.speakTimeout = setTimeout(() => {
+      window.speechSynthesis.cancel(); // Must be right before speaking to clear the queue
+      window.speechSynthesis.resume(); // Chrome bug workaround: prevents the engine from getting stuck in a silent state
+      
+      utteranceRef.current = new SpeechSynthesisUtterance(text);
+      const availableVoices = window.speechSynthesis.getVoices();
+      const targetPrefix = lang === 'id' ? 'id' : 'en';
+      const langVoices = availableVoices.filter(v => v.lang.toLowerCase().startsWith(targetPrefix));
+      
+      // Prioritize high quality neural/online voices
+      let bestVoice = langVoices.find(v => v.name.toLowerCase().includes('online') || v.name.toLowerCase().includes('natural')) || 
+                      langVoices.find(v => v.name.toLowerCase().includes('google')) ||
+                      langVoices[0] ||
+                      availableVoices.find(v => v.default) ||
+                      availableVoices[0];
+                      
+      // Explicitly set the language property so the OS knows which accent to force
+      utteranceRef.current.lang = lang === 'id' ? 'id-ID' : 'en-US';
+      
+      if (bestVoice) utteranceRef.current.voice = bestVoice;
+      utteranceRef.current.rate = 1.0;
+      utteranceRef.current.pitch = 1.0;
+      
+      utteranceRef.current.onstart = () => setState("speaking");
+      utteranceRef.current.onend = () => {
+        setState("idle"); // Stop 3D animation immediately
+        // Wait 1.5s to ensure speaker reverb is fully dead before opening mic
+        setTimeout(() => {
+          setInputValue("");
+          setInterimText("");
+          setState("listening");
+        }, 1500); 
+      };
+      
+      // Fallback if browser blocks TTS (e.g. no interaction)
+      utteranceRef.current.onerror = (e) => {
+        if (e.error === "interrupted" || e.error === "canceled") {
+          // Intentionally do nothing. We canceled it manually to clear the queue.
+          return;
+        }
+        console.warn("TTS Audio Blocked or Failed (Often due to lack of user interaction on page load):", e.error || "Unknown Error");
+        setState("listening");
+      };
+
+      window.speechSynthesis.speak(utteranceRef.current);
+    }, 100);
   };
 
   // --- SPEECH RECOGNITION (HANDS-FREE INPUT) ---
@@ -210,20 +243,24 @@ export default function InterviewRoom() {
             setInputValue(prev => {
               const newVal = (prev + " " + final).trim() + " ";
               
-              // AUTO-SUBMIT LOGIC: Reset silence timer
-              if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-              silenceTimerRef.current = setTimeout(() => {
-                 if (submitBtnRef.current) submitBtnRef.current.click();
-              }, 3000); // Wait 3 seconds of silence before auto-submitting
+              // AUTO-SUBMIT LOGIC: Only auto submit in voice mode
+              if (modeRef.current === "voice") {
+                if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                silenceTimerRef.current = setTimeout(() => {
+                   if (submitBtnRef.current) submitBtnRef.current.click();
+                }, 3000); // Wait 3 seconds of silence before auto-submitting
+              }
 
               return newVal;
             });
           } else if (interim) {
              // Delay auto-submit while still receiving interim results
-             if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-             silenceTimerRef.current = setTimeout(() => {
-                 if (submitBtnRef.current) submitBtnRef.current.click();
-             }, 3500); 
+             if (modeRef.current === "voice") {
+               if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+               silenceTimerRef.current = setTimeout(() => {
+                   if (submitBtnRef.current) submitBtnRef.current.click();
+               }, 3500); 
+             }
           }
         };
 
@@ -232,7 +269,8 @@ export default function InterviewRoom() {
           // as they are benign and our auto-restart logic handles them gracefully.
           if (e.error !== "aborted" && e.error !== "no-speech") {
             console.error("Speech error", e.error);
-          }
+            setState("listening");
+          };
         };
         
         recognitionRef.current.onend = () => {
@@ -240,12 +278,35 @@ export default function InterviewRoom() {
         };
       }
     }
-  }, [lang, state]);
+  }, [lang]);
+
+  // Smoothly apply language changes mid-session to both TTS and Recognition
+  useEffect(() => {
+    // We intentionally DO NOT cancel window.speechSynthesis here anymore.
+    // If the user changes language mid-speech, let the AI finish its current 
+    // sentence naturally so the voice doesn't "disappear". The NEXT sentence 
+    // will automatically use the new language.
+
+    // 1. Dynamically update the microphone language
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = lang === 'id' ? 'id-ID' : 'en-US';
+      
+      // If the mic is currently open, smoothly restart it so the new language takes effect instantly
+      if (isRecording) {
+        recognitionRef.current.stop();
+        setTimeout(() => {
+          if (isRecording && recognitionRef.current) {
+            recognitionRef.current.start();
+          }
+        }, 300);
+      }
+    }
+  }, [lang]);
 
   // Auto-manage microphone based on AI state
   useEffect(() => {
     let startTimer;
-    if (state === "listening") {
+    if (state === "listening" && interactionMode === "voice") {
       // Force flush any lingering text before we start listening
       setInputValue("");
       setInterimText("");
@@ -265,7 +326,7 @@ export default function InterviewRoom() {
       }
     }
     return () => clearTimeout(startTimer);
-  }, [state, isRecording]);
+  }, [state, isRecording, interactionMode]);
 
   const toggleRecording = () => {
     if (state !== "listening") return;
@@ -309,7 +370,12 @@ export default function InterviewRoom() {
         const res = await fetch("/api/interview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: [], lang, interviewType })
+          body: JSON.stringify({ 
+            messages: [], 
+            lang, 
+            interviewType,
+            userId: getUserId()
+          })
         });
         
         if (res.ok) {
@@ -354,7 +420,12 @@ export default function InterviewRoom() {
       const res = await fetch("/api/interview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newTranscript, lang, interviewType })
+        body: JSON.stringify({ 
+          messages: newTranscript, 
+          lang, 
+          interviewType,
+          userId: getUserId()
+        })
       });
 
       if (res.ok) {
@@ -369,7 +440,7 @@ export default function InterviewRoom() {
             const extractRes = await fetch("/api/extract", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ messages: newTranscript, lang, interviewType })
+              body: JSON.stringify({ messages: newTranscript, lang, interviewType, userId: getUserId() })
             });
 
             if (extractRes.ok) {
@@ -407,6 +478,12 @@ export default function InterviewRoom() {
           router.push("/dashboard");
         } else {
           setTranscript(prev => [...prev, { sender: "ai", text: data.reply }]);
+          
+          if (data.threshold && data.currentScore !== undefined) {
+             const pct = Math.min(100, Math.round((data.currentScore / data.threshold) * 100));
+             setProgressPercent(pct);
+          }
+
           speakText(data.reply);
         }
       } else {
@@ -484,8 +561,39 @@ export default function InterviewRoom() {
 
       {/* Chat / Transcript Interface (Left Side HUD) */}
       <div className={styles.chatInterface}>
-        <div style={{ position: 'absolute', top: '40px', left: '40px', zIndex: 100 }}>
+        <div style={{ position: 'absolute', top: '40px', left: '40px', zIndex: 100, display: 'flex', gap: '15px', pointerEvents: 'auto' }}>
           <LanguageToggle />
+          <div style={{
+            display: 'flex', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', 
+            borderRadius: '20px', overflow: 'hidden', backdropFilter: 'blur(10px)'
+          }}>
+            <button
+              onClick={() => setInteractionMode("voice")}
+              style={{
+                display: 'flex', alignItems: 'center',
+                background: interactionMode === "voice" ? 'var(--text-main)' : 'transparent',
+                color: interactionMode === "voice" ? 'var(--bg-color)' : 'var(--text-muted)',
+                border: 'none', padding: '6px 14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              {lang === 'id' ? "Suara" : "Voice"}
+            </button>
+            <button
+              onClick={() => setInteractionMode("text")}
+              style={{
+                display: 'flex', alignItems: 'center',
+                background: interactionMode === "text" ? 'var(--text-main)' : 'transparent',
+                color: interactionMode === "text" ? 'var(--bg-color)' : 'var(--text-muted)',
+                border: 'none', padding: '6px 14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
+                transition: 'all 0.3s'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6.01" y2="8"></line><line x1="10" y1="8" x2="10.01" y2="8"></line><line x1="14" y1="8" x2="14.01" y2="8"></line><line x1="18" y1="8" x2="18.01" y2="8"></line><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="10" y1="12" x2="10.01" y2="12"></line><line x1="14" y1="12" x2="14.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+              {lang === 'id' ? "Teks" : "Text"}
+            </button>
+          </div>
         </div>
         
         <div className={styles.transcriptContainer} ref={transcriptRef}>
@@ -503,6 +611,17 @@ export default function InterviewRoom() {
           )}
         </div>
 
+        {/* VERTICAL PROGRESS INDICATOR */}
+        <div className={styles.progressBarContainer}>
+           <div className={styles.progressLabel}>
+              <span>{progressPercent}%</span>
+              <span>{lang === 'id' ? "Progres Fase" : "Phase Progress"}</span>
+           </div>
+           <div className={styles.progressTrack}>
+             <div className={styles.progressFill} style={{ height: `${progressPercent}%` }} />
+           </div>
+        </div>
+
         <div style={{ position: 'relative', width: '100%' }}>
           {/* Interim text display above input */}
           {interimText && state === "listening" && (
@@ -514,26 +633,32 @@ export default function InterviewRoom() {
             <input
               type="text"
               className={styles.terminalInput}
-              placeholder={state === "listening" ? t.placeholder : (state === "extracting" ? "Extracting Blueprint..." : t.waiting)}
+              placeholder={
+                interactionMode === "voice" 
+                  ? "🎙️ Voice Mode Active (Typing Disabled)" 
+                  : (state === "listening" ? t.placeholder : (state === "extracting" ? "Extracting Blueprint..." : t.waiting))
+              }
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              disabled={state !== "listening"}
+              disabled={state !== "listening" || interactionMode === "voice"}
               autoFocus
             />
             {/* Microphone Button */}
-            <button 
-              type="button"
-              className={`${styles.micBtn} ${isRecording ? styles.recording : ''}`}
-              onClick={toggleRecording}
-              disabled={state !== "listening"}
-              title="Voice Input"
-            >
-              {isRecording ? (
-                <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M6 19h12v2H6z" /><path d="M12 3a3 3 0 00-3 3v8a3 3 0 006 0V6a3 3 0 00-3-3z" /><path d="M19 11v3a7 7 0 01-14 0v-3h2v3a5 5 0 0010 0v-3h2z" /></svg>
-              ) : (
-                <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M12 14a3 3 0 003-3V6a3 3 0 00-6 0v5a3 3 0 003 3z" /><path d="M19 11v3a7 7 0 01-14 0v-3h2v3a5 5 0 0010 0v-3h2zM11 20v2h2v-2h-2z" /></svg>
-              )}
-            </button>
+            {interactionMode === "voice" && (
+              <button 
+                type="button"
+                className={`${styles.micBtn} ${isRecording ? styles.recording : ''}`}
+                onClick={toggleRecording}
+                disabled={state !== "listening"}
+                title="Voice Input"
+              >
+                {isRecording ? (
+                  <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M6 19h12v2H6z" /><path d="M12 3a3 3 0 00-3 3v8a3 3 0 006 0V6a3 3 0 00-3-3z" /><path d="M19 11v3a7 7 0 01-14 0v-3h2v3a5 5 0 0010 0v-3h2z" /></svg>
+                ) : (
+                  <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M12 14a3 3 0 003-3V6a3 3 0 00-6 0v5a3 3 0 003 3z" /><path d="M19 11v3a7 7 0 01-14 0v-3h2v3a5 5 0 0010 0v-3h2zM11 20v2h2v-2h-2z" /></svg>
+                )}
+              </button>
+            )}
             {/* Submit Button */}
             <button 
               type="submit" 
@@ -550,5 +675,17 @@ export default function InterviewRoom() {
       </div>
     </div>
     </>
+  );
+}
+
+export default function InterviewPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-color)', color: 'var(--text-main)' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--text-main)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      </div>
+    }>
+      <InterviewRoom />
+    </Suspense>
   );
 }

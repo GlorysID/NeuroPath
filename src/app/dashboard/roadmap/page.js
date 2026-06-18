@@ -16,6 +16,8 @@ export default function RoadmapPage() {
   const router = useRouter();
   const { lang } = useLanguage();
 
+  const [expanding, setExpanding] = useState(false);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -23,7 +25,31 @@ export default function RoadmapPage() {
           const docRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists() && docSnap.data().profile) {
-            setProfile(docSnap.data().profile);
+            let prof = docSnap.data().profile;
+            
+            // Auto-expand legacy 3-step roadmaps
+            if (prof.milestones && prof.milestones.length <= 3) {
+              setExpanding(true);
+              try {
+                const res = await fetch("/api/expand-roadmap", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ profile: prof, lang })
+                });
+                const data = await res.json();
+                if (data.milestones) {
+                  prof.milestones = data.milestones;
+                  // Save back to Firestore silently
+                  const { updateDoc } = await import("firebase/firestore");
+                  await updateDoc(docRef, { "profile.milestones": data.milestones });
+                }
+              } catch (err) {
+                console.error("Expansion failed", err);
+              }
+              setExpanding(false);
+            }
+            
+            setProfile(prof);
           } else {
             router.push("/dashboard");
           }
@@ -37,12 +63,13 @@ export default function RoadmapPage() {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, lang]);
 
-  if (loading) {
+  if (loading || expanding) {
     return (
-      <div className={styles.loaderContainer}>
+      <div className={styles.loaderContainer} style={{ flexDirection: 'column', gap: '20px', color: 'var(--text-muted)' }}>
         <div className={styles.spinner} />
+        {expanding && <p>{lang === 'id' ? 'Memperluas Roadmap secara spesifik...' : 'Expanding Roadmap details...'}</p>}
       </div>
     );
   }
