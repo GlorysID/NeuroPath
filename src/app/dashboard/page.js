@@ -172,14 +172,6 @@ export default function Dashboard() {
     setModalContent(null);
   };
 
-  if (loading) {
-    return (
-      <div className={styles.loaderContainer}>
-        <div className={styles.spinner} />
-      </div>
-    );
-  }
-
   const fadeUp = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
@@ -195,9 +187,45 @@ export default function Dashboard() {
   } : {};
 
   return (
-    <div className={styles.dashboardWrapper}>
-      <header className={styles.header}>
-        <motion.div initial="hidden" animate="visible" variants={fadeUp}>
+    <>
+      {/* Fixed Preloader Curtain */}
+      <motion.div 
+        initial={{ y: 0 }}
+        animate={{ y: loading ? 0 : '-100vh' }}
+        transition={{ duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
+        style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh',
+          background: 'var(--bg-color)', zIndex: 999999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--text-main)',
+        }}
+      >
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, filter: 'blur(5px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px', height: '80px' }}
+        >
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut", delay: 0.0 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut", delay: 0.2 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["50px", "90px", "50px"] }} transition={{ repeat: Infinity, duration: 1.0, ease: "easeInOut", delay: 0.4 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.6 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.8 }} />
+        </motion.div>
+        
+        <div style={{ width: '120px', height: '1px', background: 'var(--text-muted)', overflow: 'hidden', position: 'relative' }}>
+          <motion.div 
+            initial={{ x: '-100%' }}
+            animate={{ x: '100%' }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+            style={{ position: 'absolute', top: 0, left: 0, width: '40%', height: '100%', background: 'var(--text-main)' }}
+          />
+        </div>
+      </motion.div>
+
+      <div className={styles.dashboardWrapper}>
+        <header className={styles.header}>
+          <motion.div initial="hidden" animate="visible" variants={fadeUp}>
           <h1 className={styles.greeting}>
             {t.welcome} <span className={styles.accent}>{user?.email?.split('@')[0] || 'Architect'}</span>
           </h1>
@@ -425,5 +453,6 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+    </>
   );
 }
