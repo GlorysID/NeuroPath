@@ -1,4 +1,5 @@
 import FloatingDock from "../components/FloatingDock";
+import ChatWidget from "../components/ChatWidget";
 import styles from "./layout.module.css";
 
 export const metadata = {
@@ -13,6 +14,7 @@ export default function DashboardLayout({ children }) {
         {children}
       </main>
       <FloatingDock />
+      <ChatWidget />
     </div>
   );
 }

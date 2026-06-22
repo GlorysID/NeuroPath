@@ -179,7 +179,7 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
             </div>
             
             <div className={styles.certBody}>
-              <div style={{ display: 'flex', flexDirection: 'row', gap: '40px', alignItems: 'center' }}>
+              <div className={styles.certContent}>
                 
                 {/* Left Column: Details */}
                 <div style={{ flex: 1 }}>
@@ -228,7 +228,7 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
 
                 {/* Right Column: NFT Image */}
                 {(mintResult?.certificateData?.imageUri || latestCredential?.imageUri) && (
-                  <div style={{ flexShrink: 0, perspective: '1000px' }}>
+                  <div className={styles.certImageWrapper}>
                     <motion.img 
                       src={mintResult?.certificateData?.imageUri || latestCredential?.imageUri} 
                       alt="NFT Image" 
@@ -254,8 +254,8 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
 
             <div className={styles.certFooter}>
               <div className={styles.verifiedStamp}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span style={{ color: '#ffffff' }}>BLOCKCHAIN VERIFIED</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" style={{ marginTop: '2px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span style={{ color: '#ffffff', position: 'relative', top: '-1px' }}>BLOCKCHAIN VERIFIED</span>
               </div>
             </div>
           </motion.div>

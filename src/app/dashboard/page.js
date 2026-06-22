@@ -126,7 +126,7 @@ export default function Dashboard() {
     }
   }, [profile, lang, feed, user]);
 
-  // Portfolio action
+  // Portfolio action (Moved up so useEffect can reference it)
   const handlePortfolio = async () => {
     setModalType("portfolio");
     setModalLoading(true);
@@ -145,7 +145,7 @@ export default function Dashboard() {
     setModalLoading(false);
   };
 
-  // Jobs action
+  // Jobs action (Moved up so useEffect can reference it)
   const handleJobs = async () => {
     setModalType("jobs");
     setModalLoading(true);
@@ -170,6 +170,37 @@ export default function Dashboard() {
     }
     setModalLoading(false);
   };
+
+  // Listen for Agentic UI events from ChatWidget
+  useEffect(() => {
+    if (!profile) return; // Wait until profile is loaded
+    
+    // 1. Listen for custom events if already on page
+    const triggerJobs = () => handleJobs();
+    const triggerPortfolio = () => handlePortfolio();
+    
+    window.addEventListener("openJobModal", triggerJobs);
+    window.addEventListener("openPortfolioModal", triggerPortfolio);
+
+    // 2. Check URL parameters if teleported from another page
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const actionParam = searchParams.get("action");
+      
+      if (actionParam === "openJobModal") {
+        handleJobs();
+        window.history.replaceState({}, "", "/dashboard");
+      } else if (actionParam === "openPortfolioModal") {
+        handlePortfolio();
+        window.history.replaceState({}, "", "/dashboard");
+      }
+    }
+
+    return () => {
+      window.removeEventListener("openJobModal", triggerJobs);
+      window.removeEventListener("openPortfolioModal", triggerPortfolio);
+    };
+  }, [profile, lang]); // Dependencies needed for handleJobs and handlePortfolio fetch
 
   const closeModal = () => {
     setModalType(null);
