@@ -134,6 +134,7 @@ function ProgressChart({ history }) {
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [interviewHistory, setInterviewHistory] = useState([]);
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -164,7 +165,9 @@ export default function ProfilePage() {
         const docRef = doc(db, "users", currentUser.uid);
         unsubSnapshot = onSnapshot(docRef, (snap) => {
           if (snap.exists()) {
-            setInterviewHistory(snap.data().interviewHistory || []);
+            const data = snap.data();
+            setInterviewHistory(data.interviewHistory || []);
+            setProfile({ name: data.name });
           }
           setLoading(false);
         });
@@ -272,7 +275,7 @@ export default function ProfilePage() {
         <header className={styles.header}>
           <motion.div initial="hidden" animate="visible" variants={fadeUp}>
             <h1 className={styles.greeting}>
-              {t.welcome} <span className={styles.accent}>{user?.email?.split('@')[0] || 'Architect'}</span>
+              {t.welcome} <span className={styles.accent}>{profile?.name || user?.email?.split('@')[0] || 'Architect'}</span>
             </h1>
             <p className={styles.subtitle}>{t.subtitle}</p>
           </motion.div>

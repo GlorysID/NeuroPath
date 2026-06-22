@@ -72,8 +72,11 @@ export default function Dashboard() {
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (data.profile) {
-              setProfile(data.profile);
+              setProfile({ ...data.profile, name: data.name });
               setHasRoadmap(true);
+            } else if (data.name) {
+              // If they haven't finished the interview but have a name
+              setProfile({ name: data.name });
             }
             if (data.interviewState) {
               setInterviewState(data.interviewState);
@@ -285,7 +288,7 @@ export default function Dashboard() {
         <header className={styles.header}>
           <motion.div initial="hidden" animate="visible" variants={fadeUp}>
             <h1 className={styles.greeting}>
-              {t.welcome} <span className={styles.accent}>{user?.email?.split('@')[0] || 'Architect'}</span>
+              {t.welcome} <span className={styles.accent}>{profile?.name || user?.email?.split('@')[0] || 'Architect'}</span>
             </h1>
             <p className={styles.subtitle}>{t.subtitle}</p>
           </motion.div>
