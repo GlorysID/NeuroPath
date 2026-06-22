@@ -54,9 +54,9 @@
   background: rgba(var(--surface-color-rgb, 20, 20, 20), 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--surface-color-dark);
   border-radius: 24px;
-  padding: 24px 32px; /* Slightly tighter internal padding to look less noisy */
+  padding: 24px 32px;
   position: relative;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   overflow: hidden;
@@ -141,12 +141,20 @@
 
 @media (max-width: 768px) {
   .svgWrapper {
-    display: none; /* Hide complex SVG on mobile */
+    display: none; /* Hide complex curved SVG on mobile */
   }
   
+  .timelineContainer {
+    padding: 0;
+  }
+
+  .timelineNode {
+    padding: 16px 0;
+  }
+
   .timelineNode.left, .timelineNode.right {
-    flex-direction: row-reverse;
-    justify-content: flex-end;
+    flex-direction: column;
+    justify-content: flex-start;
   }
   
   .timelineEmpty {
@@ -154,16 +162,22 @@
   }
   
   .glassCard {
-    width: calc(100% - 40px);
-    margin-left: 40px !important;
+    width: 100%;
+    margin-left: 0 !important;
+    padding: 20px;
+    border-radius: 16px;
   }
   
   .pathDot {
-    left: 20px !important;
+    display: none; /* Hide dots as they clash on mobile */
   }
   
   .nodesWrapper {
-    gap: 24px;
+    gap: 16px;
     justify-content: flex-start;
+    border-left: 2px dashed var(--text-muted);
+    padding-left: 24px;
+    margin-left: 8px;
+    margin-top: 20px;
   }
 }

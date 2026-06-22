@@ -6,6 +6,30 @@ export default function SkillTreeRoadmap({ className, milestones }) {
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [schedulingIndex, setSchedulingIndex] = useState(null);
+
+  const handleSchedule = async (node, index) => {
+    setSchedulingIndex(index);
+    try {
+      const res = await fetch("/api/generate-learning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          topic: `${node.title}: ${node.desc || node.description}`
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.open(data.url, '_blank');
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch learning URL:", err);
+    }
+    setSchedulingIndex(null);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -121,6 +145,30 @@ export default function SkillTreeRoadmap({ className, milestones }) {
                     <p className={styles.nodeTitle}>{node.title}</p>
                   </div>
                   <p className={styles.nodeDesc}>{node.desc || node.description}</p>
+                  <div style={{ marginTop: "16px", zIndex: 10, position: "relative" }}>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleSchedule(node, i); }}
+                      disabled={schedulingIndex === i}
+                      style={{
+                        padding: "8px 16px",
+                        background: "var(--bg-color)",
+                        border: "1px solid var(--text-muted)",
+                        borderRadius: "100px",
+                        color: "var(--text-main)",
+                        fontSize: "0.8rem",
+                        cursor: schedulingIndex === i ? "wait" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        transition: "all 0.2s",
+                        opacity: schedulingIndex === i ? 0.7 : 1
+                      }}
+                      onMouseOver={(e) => { if(schedulingIndex !== i) e.target.style.background = 'var(--surface-color-dark)'; }}
+                      onMouseOut={(e) => { if(schedulingIndex !== i) e.target.style.background = 'var(--bg-color)'; }}
+                    >
+                      {schedulingIndex === i ? "Mengarahkan..." : "Mulai Belajar"}
+                    </button>
+                  </div>
                   <div className={styles.glowEffect} />
                 </motion.div>
               </div>

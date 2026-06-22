@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "../../context/LanguageContext";
 import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
+import RadarChart from "../../components/RadarChart";
 import styles from "./page.module.css";
 
 const DIMENSION_COLORS = [
@@ -20,24 +21,36 @@ const DIMENSION_COLORS = [
   { key: "adaptabilityScore", label: "Adaptability", color: "#4dd0e1" },
 ];
 
+// Calculates the average cognitive score for a single session
+const calculateAverageScore = (extracted) => {
+  if (!extracted) return 0;
+  let total = 0;
+  let count = 0;
+  DIMENSION_COLORS.forEach(dim => {
+    if (extracted[dim.key] !== undefined) {
+      total += extracted[dim.key];
+      count++;
+    }
+  });
+  return count > 0 ? Math.round(total / count) : 0;
+};
+
 function ProgressChart({ history }) {
   const dataPoints = history
     .filter(h => h.extracted)
     .map((h, i) => ({
       index: i,
-      scores: DIMENSION_COLORS.map(d => ({
-        key: d.key,
-        value: h.extracted[d.key] || 0,
-      }))
+      date: h.date,
+      average: calculateAverageScore(h.extracted)
     }));
 
   if (dataPoints.length < 1) {
-    return <div className={styles.noChartData}>—</div>;
+    return <div className={styles.noChartData}>Belum ada data perkembangan skor.</div>;
   }
 
-  const padding = { top: 20, right: 20, bottom: 30, left: 40 };
-  const W = 800;
-  const H = 240;
+  const padding = { top: 30, right: 30, bottom: 40, left: 50 };
+  const W = 600;
+  const H = 280;
   const chartW = W - padding.left - padding.right;
   const chartH = H - padding.top - padding.bottom;
   const maxPoints = dataPoints.length;
@@ -45,54 +58,76 @@ function ProgressChart({ history }) {
   const yScale = (val) => padding.top + chartH - (val / 100) * chartH;
   const xScale = (i) => padding.left + (maxPoints > 1 ? i * xStep : chartW / 2);
 
+  // Path for the area fill
+  let areaPath = "";
+  if (dataPoints.length > 0) {
+    const pointsStr = dataPoints.map((dp, i) => `${xScale(i)},${yScale(dp.average)}`).join(" L ");
+    areaPath = `M ${xScale(0)},${yScale(0)} L ${pointsStr} L ${xScale(dataPoints.length - 1)},${yScale(0)} Z`;
+  }
+
+  const points = dataPoints.map((dp, i) => `${xScale(i)},${yScale(dp.average)}`).join(" ");
+
   return (
-    <div>
-      <div className={styles.chartContainer}>
-        <svg viewBox={`0 0 ${W} ${H}`} className={styles.chartSvg} preserveAspectRatio="xMidYMid meet">
-          {[0, 25, 50, 75, 100].map(v => (
-            <g key={v}>
-              <line x1={padding.left} y1={yScale(v)} x2={W - padding.right} y2={yScale(v)}
-                stroke="var(--surface-color-dark)" strokeWidth="0.5" opacity="0.5" />
-              <text x={padding.left - 8} y={yScale(v) + 4} textAnchor="end"
-                fill="var(--text-muted)" fontSize="9" fontFamily="var(--font-sans)">{v}</text>
-            </g>
-          ))}
-          {dataPoints.map((dp, i) => (
-            <text key={i} x={xScale(i)} y={H - 6} textAnchor="middle"
-              fill="var(--text-muted)" fontSize="8" fontFamily="var(--font-sans)">S{i + 1}</text>
-          ))}
-          {DIMENSION_COLORS.map((dim) => {
-            const points = dataPoints.map((dp, i) => {
-              const score = dp.scores.find(s => s.key === dim.key)?.value || 0;
-              return `${xScale(i)},${yScale(score)}`;
-            }).join(" ");
-            return (
-              <g key={dim.key}>
-                <motion.polyline points={points} fill="none" stroke={dim.color} strokeWidth="2"
-                  strokeLinecap="round" strokeLinejoin="round"
-                  initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{ duration: 1.2, ease: "easeOut" }} />
-                {dataPoints.map((dp, i) => {
-                  const score = dp.scores.find(s => s.key === dim.key)?.value || 0;
-                  return (
-                    <motion.circle key={`${dim.key}-${i}`} cx={xScale(i)} cy={yScale(score)} r="3"
-                      fill={dim.color} initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.8 + i * 0.1 }} />
-                  );
-                })}
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-      <div className={styles.chartLegend}>
-        {DIMENSION_COLORS.map(dim => (
-          <div key={dim.key} className={styles.legendItem}>
-            <div className={styles.legendDot} style={{ background: dim.color }} />
-            {dim.label}
-          </div>
+    <div className={styles.chartContainer}>
+      <svg viewBox={`0 0 ${W} ${H}`} className={styles.chartSvg} preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--text-main)" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="var(--text-main)" stopOpacity="0" />
+          </linearGradient>
+          <filter id="lineGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        {/* Grid lines (Y-axis) */}
+        {[0, 25, 50, 75, 100].map(v => (
+          <g key={v}>
+            <line x1={padding.left} y1={yScale(v)} x2={W - padding.right} y2={yScale(v)}
+              stroke="var(--surface-color-dark)" strokeWidth="1" strokeDasharray="4 4" opacity="0.6" />
+            <text x={padding.left - 15} y={yScale(v) + 4} textAnchor="end"
+              fill="var(--text-muted)" fontSize="11" fontWeight="500" fontFamily="var(--font-sans)">{v}</text>
+          </g>
         ))}
-      </div>
+        
+        {/* Grid lines (X-axis) */}
+        {dataPoints.map((dp, i) => (
+          <g key={`x-${i}`}>
+            <text x={xScale(i)} y={H - 10} textAnchor="middle"
+              fill="var(--text-muted)" fontSize="12" fontWeight="600" fontFamily="var(--font-sans)">Sesi {i + 1}</text>
+          </g>
+        ))}
+
+        {/* Area Fill */}
+        {areaPath && (
+          <motion.path d={areaPath} fill="url(#areaGradient)"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.5 }} />
+        )}
+
+        {/* Main Line */}
+        <motion.polyline points={points} fill="none" stroke="var(--text-main)" strokeWidth="3"
+          strokeLinecap="round" strokeLinejoin="round" filter="url(#lineGlow)"
+          initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }} />
+          
+        {/* Data point circles */}
+        {dataPoints.map((dp, i) => (
+          <g key={`dot-${i}`}>
+            <motion.circle cx={xScale(i)} cy={yScale(dp.average)} r="5"
+              fill="var(--bg-color)" stroke="var(--text-main)" strokeWidth="2.5"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.8 + i * 0.1 }} />
+            
+            {/* Value Label */}
+            <motion.text x={xScale(i)} y={yScale(dp.average) - 15} textAnchor="middle"
+              fill="var(--text-main)" fontSize="11" fontWeight="600" fontFamily="var(--font-sans)"
+              initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 + i * 0.1 }}>
+              {dp.average}
+            </motion.text>
+          </g>
+        ))}
+      </svg>
     </div>
   );
 }
@@ -159,8 +194,40 @@ export default function ProfilePage() {
   };
 
   const getTypeLabel = (type) => {
-    if (!type || type === 'Initial Profiling') return lang === 'id' ? 'Profilisasi Awal' : 'Initial Profiling';
-    return type;
+    if (!type) return lang === 'id' ? 'Profilisasi Awal' : 'Initial Profiling';
+    
+    // Map of known raw types to readable formats
+    const typeMapId = {
+      'Initial Profiling': 'Profilisasi Awal',
+      'TECHNICAL_DEEP_DIVE': 'Eksplorasi Teknis Mendalam',
+      'BEHAVIORAL': 'Wawancara Perilaku',
+      'SYSTEM_DESIGN': 'Desain Sistem',
+      'LOGICAL_REASONING': 'Penalaran Logis',
+      'CULTURE_FIT': 'Kecocokan Budaya',
+      'LEADERSHIP': 'Kepemimpinan'
+    };
+
+    const typeMapEn = {
+      'Initial Profiling': 'Initial Profiling',
+      'TECHNICAL_DEEP_DIVE': 'Technical Deep Dive',
+      'BEHAVIORAL': 'Behavioral Interview',
+      'SYSTEM_DESIGN': 'System Design',
+      'LOGICAL_REASONING': 'Logical Reasoning',
+      'CULTURE_FIT': 'Culture Fit',
+      'LEADERSHIP': 'Leadership'
+    };
+
+    const map = lang === 'id' ? typeMapId : typeMapEn;
+    
+    // If it's in our map, return the mapped value
+    if (map[type]) return map[type];
+    if (map[type.toUpperCase()]) return map[type.toUpperCase()];
+
+    // Fallback: convert SNAKE_CASE to Title Case
+    return type
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   const creationDate = user?.metadata?.creationTime
@@ -192,6 +259,7 @@ export default function ProfilePage() {
           <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.6 }} />
           <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.8 }} />
         </motion.div>
+        
         <div style={{ width: '120px', height: '1px', background: 'var(--text-muted)', overflow: 'hidden', position: 'relative' }}>
           <motion.div initial={{ x: '-100%' }} animate={{ x: '100%' }}
             transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
@@ -315,13 +383,36 @@ export default function ProfilePage() {
             </button>
           </motion.div>
 
-          {/* Row 2: Progress Chart (span 3) */}
+          {/* Row 2: Progress Chart (span 2) + Radar Chart (span 1) */}
           <motion.div
-            className={`${styles.bentoCard} ${styles.span3}`}
+            className={`${styles.bentoCard} ${styles.span2}`}
             initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.3 }}
           >
             <div className={styles.cardHeader}>{t.progressLabel}</div>
             <ProgressChart history={interviewHistory} />
+          </motion.div>
+
+          <motion.div
+            className={styles.bentoCard}
+            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.4 }}
+          >
+            <div className={styles.cardHeader}>{lang === 'id' ? 'Dimensi Kognitif' : 'Cognitive Dimensions'}</div>
+            {interviewHistory.length > 0 && interviewHistory[interviewHistory.length - 1].extracted ? (
+              <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center', marginTop: '-20px' }}>
+                <RadarChart 
+                  scores={{
+                    communication: interviewHistory[interviewHistory.length - 1].extracted.communicationScore || 0,
+                    technical: interviewHistory[interviewHistory.length - 1].extracted.technicalScore || 0,
+                    logic: interviewHistory[interviewHistory.length - 1].extracted.logicScore || 0,
+                    creativity: interviewHistory[interviewHistory.length - 1].extracted.creativityScore || 0,
+                    leadership: interviewHistory[interviewHistory.length - 1].extracted.leadershipScore || 0,
+                    adaptability: interviewHistory[interviewHistory.length - 1].extracted.adaptabilityScore || 0,
+                  }} 
+                />
+              </div>
+            ) : (
+              <div className={styles.emptyHistory}>—</div>
+            )}
           </motion.div>
 
         </div>

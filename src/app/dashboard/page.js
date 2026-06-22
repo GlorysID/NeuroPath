@@ -24,10 +24,13 @@ export default function Dashboard() {
   const [credentials, setCredentials] = useState([]);
   const [feed, setFeed] = useState("");
 
-  // Modal states
   const [modalType, setModalType] = useState(null); // 'portfolio' | 'jobs' | null
   const [modalLoading, setModalLoading] = useState(false);
   const [modalContent, setModalContent] = useState(null);
+
+  // Cover Letter states
+  const [generatingCoverLetter, setGeneratingCoverLetter] = useState(null);
+  const [coverLetters, setCoverLetters] = useState({});
 
   const router = useRouter();
   const { lang } = useLanguage();
@@ -58,11 +61,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     let unsubscribeSnapshot = null;
-    
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        
+
         // Listen to the document in real-time to bypass any stale caches
         const docRef = doc(db, "users", currentUser.uid);
         unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
@@ -147,6 +150,7 @@ export default function Dashboard() {
     setModalType("jobs");
     setModalLoading(true);
     setModalContent(null);
+    setCoverLetters({}); // Reset when opening modal
     try {
       const res = await fetch("/api/agent", {
         method: "POST",
@@ -169,7 +173,30 @@ export default function Dashboard() {
 
   const closeModal = () => {
     setModalType(null);
-    setModalContent(null);
+    setGeneratingCoverLetter(null);
+  };
+
+  const handleGenerateCoverLetter = async (index, job) => {
+    setGeneratingCoverLetter(index);
+    try {
+      const res = await fetch("/api/generate-cover-letter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobTitle: job.title,
+          company: job.company,
+          profile: profile,
+          lang: lang
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCoverLetters(prev => ({ ...prev, [index]: data.coverLetter }));
+      }
+    } catch (err) {
+      console.error("Failed to generate cover letter:", err);
+    }
+    setGeneratingCoverLetter(null);
   };
 
   const fadeUp = {
@@ -189,7 +216,7 @@ export default function Dashboard() {
   return (
     <>
       {/* Fixed Preloader Curtain */}
-      <motion.div 
+      <motion.div
         initial={{ y: 0 }}
         animate={{ y: loading ? 0 : '-100vh' }}
         transition={{ duration: 1.2, ease: [0.76, 0, 0.24, 1] }}
@@ -200,7 +227,7 @@ export default function Dashboard() {
           color: 'var(--text-main)',
         }}
       >
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9, filter: 'blur(5px)' }}
           animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -212,9 +239,9 @@ export default function Dashboard() {
           <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.6 }} />
           <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.8 }} />
         </motion.div>
-        
+
         <div style={{ width: '120px', height: '1px', background: 'var(--text-muted)', overflow: 'hidden', position: 'relative' }}>
-          <motion.div 
+          <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: '100%' }}
             transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
@@ -226,233 +253,290 @@ export default function Dashboard() {
       <div className={styles.dashboardWrapper}>
         <header className={styles.header}>
           <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-          <h1 className={styles.greeting}>
-            {t.welcome} <span className={styles.accent}>{user?.email?.split('@')[0] || 'Architect'}</span>
-          </h1>
-          <p className={styles.subtitle}>{t.subtitle}</p>
-        </motion.div>
-
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <ThemeToggle />
-          <LanguageToggle />
-        </div>
-      </header>
-
-      {hasRoadmap ? (
-        <div className={styles.bentoGrid}>
-          {/* Row 1: Hero Card (Span 3) */}
-          <motion.div
-            className={styles.bentoHero}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.1 }}
-          >
-            <div className={styles.heroContent}>
-              <h2>{t.archetypeLabel}</h2>
-              <h1>{profile?.archetype || 'Uncalibrated'}</h1>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '300px', lineHeight: '1.6' }}>
-                {profile?.readinessLevel || 'Unknown'} · {lang === 'id' ? 'Peta kognitif Anda telah dianalisis.' : 'Your cognitive map has been analyzed.'}
-              </p>
-            </div>
+            <h1 className={styles.greeting}>
+              {t.welcome} <span className={styles.accent}>{user?.email?.split('@')[0] || 'Architect'}</span>
+            </h1>
+            <p className={styles.subtitle}>{t.subtitle}</p>
           </motion.div>
 
-          {/* Row 2: RadarChart (Span 2) + Live Feed (Span 1) */}
-          <motion.div
-            className={`${styles.bentoCard} ${styles.span2}`}
-            style={{ height: '420px' }}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.2 }}
-          >
-            <div className={styles.cardHeader}>{t.radarTitle}</div>
-            <RadarChart scores={radarScores} />
-          </motion.div>
-
-          <motion.div
-            className={styles.bentoCard}
-            style={{ background: 'var(--surface-color-dark)', display: 'flex', flexDirection: 'column', height: '420px' }}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.6 }}
-          >
-            <div className={styles.cardHeader} style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-main)', animation: 'pulse 2s infinite' }} />
-              {t.liveAi || t.liveAgent}
-            </div>
-            <div className={styles.feedContainer} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px', flex: 1, maxHeight: 'none', height: '100%', overflowY: 'hidden' }}>
-              {feed ? (
-                <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)', flex: 1, overflowY: 'auto' }}>
-                  {feed.split('\n\n').map((para, i) => (
-                    <p key={i} style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
-                      {para}
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', flex: 1 }}>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                    {t.analyzing}
-                  </p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Row 3: Actions (Span 1) + ProgressionStepper (Span 1) + SkillBadge (Span 1) */}
-          <motion.div
-            className={styles.bentoCard}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.4 }}
-          >
-            <div className={styles.cardHeader}>{t.actions}</div>
-            <div className={styles.actionStack}>
-              <Link href="/dashboard/roadmap" className={styles.actionBtn}>
-                <span className={styles.actionIcon}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
-                </span>
-                <span>{t.viewRoadmap}</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </Link>
-              <button onClick={handlePortfolio} className={styles.actionBtn}>
-                <span className={styles.actionIcon}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                </span>
-                <span>{t.genPortfolio}</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </button>
-              <button onClick={handleJobs} className={styles.actionBtn}>
-                <span className={styles.actionIcon}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                </span>
-                <span>{t.findJobs}</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className={styles.bentoCard}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.3 }}
-          >
-            <ProgressionStepper interviewState={interviewState || {}} />
-          </motion.div>
-
-          <motion.div
-            className={`${styles.bentoCard} ${styles.badgeCard}`}
-            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.5 }}
-          >
-            <SkillBadge
-              archetype={profile?.archetype || 'Uncalibrated'}
-              currentPhase={interviewState?.currentState || 'PROFILING'}
-              interviewState={interviewState || {}}
-              credentials={credentials}
-              userId={user?.uid}
-              hasRoadmap={hasRoadmap}
-            />
-          </motion.div>
-        </div>
-      ) : (
-        <motion.section
-          className={styles.emptyState}
-          initial="hidden" animate="visible" variants={fadeUp}
-        >
-          <div className={styles.emptyStateIcon}>
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <ThemeToggle />
+            <LanguageToggle />
           </div>
-          <h2>{t.noData}</h2>
-          <p>{t.noDataDesc}</p>
-          <Link href="/interview" className={styles.primaryBtn}>{t.initiateBtn}</Link>
-        </motion.section>
-      )}
+        </header>
 
-      {/* === MODAL OVERLAY === */}
-      {modalType && (
-        <div className={styles.modalOverlay} onClick={closeModal}>
-          <motion.div
-            className={styles.modal}
-            onClick={(e) => e.stopPropagation()}
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className={styles.modalHeader}>
-              <h3>{modalType === 'portfolio' ? t.portfolioTitle : t.jobsTitle}</h3>
-              <button onClick={closeModal} className={styles.modalClose}>✕</button>
-            </div>
-
-            {modalLoading ? (
-              <div className={styles.modalLoading}>
-                <div className={styles.spinner} style={{ width: '24px', height: '24px', borderWidth: '2px' }} />
-                <p>{t.generating}</p>
+        {hasRoadmap ? (
+          <div className={styles.bentoGrid}>
+            {/* Row 1: Hero Card (Span 3) */}
+            <motion.div
+              className={styles.bentoHero}
+              initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.1 }}
+            >
+              <div className={styles.heroContent}>
+                <h2>{t.archetypeLabel}</h2>
+                <h1>{profile?.archetype || 'Uncalibrated'}</h1>
               </div>
-            ) : modalType === 'portfolio' ? (
-              /* PORTFOLIO MODAL */
-              <div className={styles.modalBody}>
-                <pre className={styles.portfolioText}>{modalContent?.text}</pre>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '300px', lineHeight: '1.6' }}>
+                  {profile?.readinessLevel || 'Unknown'} · {lang === 'id' ? 'Peta kognitif Anda telah dianalisis.' : 'Your cognitive map has been analyzed.'}
+                </p>
               </div>
-            ) : (
-              /* JOBS MODAL */
-              <div className={styles.modalBody}>
-                {/* AI Analysis */}
-                <p className={styles.jobAnalysis}>{modalContent?.analysis}</p>
+            </motion.div>
 
-                {/* AI Recommended Titles */}
-                {modalContent?.jobTitles?.length > 0 && (
-                  <div className={styles.jobSection}>
-                    <h4 className={styles.jobSectionTitle}>{t.recommended}</h4>
-                    {modalContent.jobTitles.map((title, i) => (
-                      <div key={i} className={styles.jobRecommendation}>
-                        <span className={styles.jobTitleText}>{title}</span>
-                        {modalContent.reasoning?.[i] && (
-                          <span className={styles.jobReason}>{modalContent.reasoning[i]}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {/* Row 2: RadarChart (Span 2) + Live Feed (Span 1) */}
+            <motion.div
+              className={`${styles.bentoCard} ${styles.span2}`}
+              style={{ height: '420px' }}
+              initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.2 }}
+            >
+              <div className={styles.cardHeader}>{t.radarTitle}</div>
+              <RadarChart scores={radarScores} />
+            </motion.div>
 
-                {/* Live Listings from JSearch or Fallback */}
-                {modalContent?.listings?.length > 0 ? (
-                  <div className={styles.jobSection}>
-                    <h4 className={styles.jobSectionTitle}>{t.liveListings}</h4>
-                    {modalContent.listings.map((job, i) => (
-                      <div key={i} className={styles.jobListing}>
-                        <div>
-                          <span className={styles.jobListingTitle}>{job.title}</span>
-                          <span className={styles.jobListingMeta}>{job.company} · {job.location}</span>
-                        </div>
-                        <a href={job.url} target="_blank" rel="noopener noreferrer" className={styles.applyBtn}>
-                          {t.apply} →
-                        </a>
-                      </div>
+            <motion.div
+              className={styles.bentoCard}
+              style={{ background: 'var(--surface-color-dark)', display: 'flex', flexDirection: 'column', height: '420px' }}
+              initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.6 }}
+            >
+              <div className={styles.cardHeader} style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-main)', animation: 'pulse 2s infinite' }} />
+                {t.liveAi || t.liveAgent}
+              </div>
+              <div className={styles.feedContainer} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px', flex: 1, maxHeight: 'none', height: '100%', overflowY: 'hidden' }}>
+                {feed ? (
+                  <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)', flex: 1, overflowY: 'auto' }}>
+                    {feed.split('\n\n').map((para, i) => (
+                      <p key={i} style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
+                        {para}
+                      </p>
                     ))}
                   </div>
                 ) : (
-                  <div className={styles.jobSection} style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
-                    <h4 className={styles.jobSectionTitle} style={{ marginBottom: '8px', color: 'var(--text-main)' }}>{lang === 'id' ? 'Peluang Karir Tersirat' : 'Implied Opportunities'}</h4>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                      {lang === 'id' 
-                        ? 'Saat ini belum ada lowongan dengan judul persis di database langsung kami. Namun jangan khawatir! AI telah merangkai tautan pencarian LinkedIn khusus berdasarkan kata kunci keahlian (skill) Anda di bawah ini.'
-                        : 'There are no exact title matches in our live database right now. Don\'t worry! The AI has constructed a specialized LinkedIn search link based on your core skill keywords below.'}
+                  <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', flex: 1 }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                      {t.analyzing}
                     </p>
                   </div>
                 )}
-
-                {/* LinkedIn Button */}
-                {modalContent?.linkedinUrl && (
-                  <a
-                    href={modalContent.linkedinUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.linkedinBtn}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                    {t.openLinkedin}
-                  </a>
-                )}
               </div>
-            )}
-          </motion.div>
-        </div>
-      )}
-    </div>
+            </motion.div>
+
+            {/* Row 3: Actions (Span 1) + ProgressionStepper (Span 1) + SkillBadge (Span 1) */}
+            <motion.div
+              className={styles.bentoCard}
+              initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.4 }}
+            >
+              <div className={styles.cardHeader}>{t.actions}</div>
+              <div className={styles.actionStack}>
+                <Link href="/dashboard/roadmap" className={styles.actionBtn}>
+                  <span className={styles.actionIcon}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" /><line x1="9" y1="3" x2="9" y2="18" /><line x1="15" y1="6" x2="15" y2="21" /></svg>
+                  </span>
+                  <span>{t.viewRoadmap}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                </Link>
+                <button onClick={handlePortfolio} className={styles.actionBtn}>
+                  <span className={styles.actionIcon}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
+                  </span>
+                  <span>{t.genPortfolio}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                </button>
+                <button onClick={handleJobs} className={styles.actionBtn}>
+                  <span className={styles.actionIcon}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+                  </span>
+                  <span>{t.findJobs}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+                </button>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className={styles.bentoCard}
+              initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.3 }}
+            >
+              <ProgressionStepper interviewState={interviewState || {}} />
+            </motion.div>
+
+            <motion.div
+              className={`${styles.bentoCard} ${styles.badgeCard}`}
+              initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.5 }}
+            >
+              <SkillBadge
+                archetype={profile?.archetype || 'Uncalibrated'}
+                currentPhase={interviewState?.currentState || 'PROFILING'}
+                interviewState={interviewState || {}}
+                credentials={credentials}
+                userId={user?.uid}
+                hasRoadmap={hasRoadmap}
+              />
+            </motion.div>
+          </div>
+        ) : (
+          <motion.section
+            className={styles.emptyState}
+            initial="hidden" animate="visible" variants={fadeUp}
+          >
+            <div className={styles.emptyStateIcon}>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <h2>{t.noData}</h2>
+            <p>{t.noDataDesc}</p>
+            <Link href="/interview" className={styles.primaryBtn}>{t.initiateBtn}</Link>
+          </motion.section>
+        )}
+
+        {/* === MODAL OVERLAY === */}
+        {modalType && (
+          <div className={styles.modalOverlay} onClick={closeModal}>
+            <motion.div
+              className={styles.modal}
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className={styles.modalHeader}>
+                <h3>{modalType === 'portfolio' ? t.portfolioTitle : t.jobsTitle}</h3>
+                <button onClick={closeModal} className={styles.modalClose}>✕</button>
+              </div>
+
+              {modalLoading ? (
+                <div className={styles.modalLoading}>
+                  <div className={styles.spinner} style={{ width: '24px', height: '24px', borderWidth: '2px' }} />
+                  <p>{t.generating}</p>
+                </div>
+              ) : modalType === 'portfolio' ? (
+                /* PORTFOLIO MODAL */
+                <div className={styles.modalBody}>
+                  <pre className={styles.portfolioText}>{modalContent?.text}</pre>
+                </div>
+              ) : (
+                /* JOBS MODAL */
+                <div className={styles.modalBody}>
+                  {/* AI Analysis */}
+                  <p className={styles.jobAnalysis}>{modalContent?.analysis}</p>
+
+                  {/* AI Recommended Titles */}
+                  {modalContent?.jobTitles?.length > 0 && (
+                    <div className={styles.jobSection}>
+                      <h4 className={styles.jobSectionTitle}>{t.recommended}</h4>
+                      {modalContent.jobTitles.map((title, i) => {
+                        const recIndex = `rec-${i}`;
+                        return (
+                          <div key={i} className={styles.jobListingContainer}>
+                            <div className={styles.jobRecommendation} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <div>
+                                <span className={styles.jobTitleText}>{title}</span>
+                                {modalContent.reasoning?.[i] && (
+                                  <span className={styles.jobReason} style={{ display: 'block', marginTop: '4px' }}>{modalContent.reasoning[i]}</span>
+                                )}
+                              </div>
+                              <div className={styles.jobActions} style={{ marginTop: '4px' }}>
+                                <button
+                                  onClick={() => handleGenerateCoverLetter(recIndex, { title: title, company: "[Nama Perusahaan Tujuan]" })}
+                                  disabled={generatingCoverLetter === recIndex}
+                                  className={styles.coverLetterBtn}
+                                >
+                                  {generatingCoverLetter === recIndex ? (lang === 'id' ? "Menyusun..." : "Writing...") : "Buat Draf Cover Letter"}
+                                </button>
+                              </div>
+                            </div>
+                            {coverLetters[recIndex] && (
+                              <div className={styles.coverLetterPanel}>
+                                <div className={styles.clHeader}>
+                                  <span className={styles.clBadge}>AI Tailored</span>
+                                  <button
+                                    onClick={() => navigator.clipboard.writeText(coverLetters[recIndex])}
+                                    className={styles.copyBtn}
+                                    title="Copy to clipboard"
+                                  >
+                                    Salin Teks
+                                  </button>
+                                </div>
+                                <pre className={styles.clText}>{coverLetters[recIndex]}</pre>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Live Listings from JSearch or Fallback */}
+                  {modalContent?.listings?.length > 0 ? (
+                    <div className={styles.jobSection}>
+                      <h4 className={styles.jobSectionTitle}>{t.liveListings}</h4>
+                      {modalContent.listings.map((job, i) => (
+                        <div key={i} className={styles.jobListingContainer}>
+                          <div className={styles.jobListing}>
+                            <div>
+                              <span className={styles.jobListingTitle}>{job.title}</span>
+                              <span className={styles.jobListingMeta}>{job.company} · {job.location}</span>
+                            </div>
+                            <div className={styles.jobActions}>
+                              <button
+                                onClick={() => handleGenerateCoverLetter(i, job)}
+                                disabled={generatingCoverLetter === i}
+                                className={styles.coverLetterBtn}
+                              >
+                                {generatingCoverLetter === i ? (lang === 'id' ? "Menyusun..." : "Writing...") : "Buat Cover Letter"}
+                              </button>
+                              <a href={job.url} target="_blank" rel="noopener noreferrer" className={styles.applyBtn}>
+                                {t.apply} →
+                              </a>
+                            </div>
+                          </div>
+                          {coverLetters[i] && (
+                            <div className={styles.coverLetterPanel}>
+                              <div className={styles.clHeader}>
+                                <span className={styles.clBadge}>AI Tailored</span>
+                                <button
+                                  onClick={() => navigator.clipboard.writeText(coverLetters[i])}
+                                  className={styles.copyBtn}
+                                  title="Copy to clipboard"
+                                >
+                                  Salin Teks
+                                </button>
+                              </div>
+                              <pre className={styles.clText}>{coverLetters[i]}</pre>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.jobSection} style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                      <h4 className={styles.jobSectionTitle} style={{ marginBottom: '8px', color: 'var(--text-main)' }}>{lang === 'id' ? 'Peluang Karir Tersirat' : 'Implied Opportunities'}</h4>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                        {lang === 'id'
+                          ? 'Saat ini belum ada lowongan dengan judul persis di database langsung kami. Namun jangan khawatir! AI telah merangkai tautan pencarian LinkedIn khusus berdasarkan kata kunci keahlian (skill) Anda di bawah ini.'
+                          : 'There are no exact title matches in our live database right now. Don\'t worry! The AI has constructed a specialized LinkedIn search link based on your core skill keywords below.'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* LinkedIn Button */}
+                  {modalContent?.linkedinUrl && (
+                    <a
+                      href={modalContent.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.linkedinBtn}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                      {t.openLinkedin}
+                    </a>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </div>
     </>
   );
 }

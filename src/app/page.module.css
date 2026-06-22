@@ -683,44 +683,206 @@
   color: var(--text-main);
 }
 
-@media (max-width: 900px) {
+/* =======================================
+   RESPONSIVE OVERRIDES
+   ======================================= */
+@media (max-width: 1024px) {
   .hero {
-    flex-direction: column;
-    margin-top: 40px;
-    gap: 60px;
-    padding-top: 40px;
+    gap: 40px;
+    padding: 80px 5% 60px;
+  }
+  .title {
+    font-size: 3rem;
+  }
+  .howGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  /* Navbar */
+  .navbar {
+    padding: 20px 16px;
+  }
+  .navLinks {
+    gap: 16px;
+  }
+  .logo {
+    font-size: 1.25rem;
+  }
+  .loginBtn {
+    font-size: 0.8rem;
   }
 
+  /* Hero Section */
+  .hero {
+    flex-direction: column;
+    margin-top: 0px;
+    gap: 60px;
+    padding: 100px 16px 60px;
+    text-align: center;
+  }
+  
   .heroContent {
-    align-items: flex-start;
+    align-items: center;
+  }
+  
+  .title {
+    font-size: 2.25rem;
+  }
+  
+  .subtitle {
+    font-size: 1rem;
+    padding: 0 10px;
+  }
+  
+  .ctaGroup {
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .primaryCta {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .secondaryCta {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    border: 1px solid var(--text-muted);
+    padding: 16px 32px;
+    box-sizing: border-box;
+  }
+
+  /* Hide Robot Background on Mobile */
+  .heroBackgroundRobot {
+    display: none;
+  }
+
+  /* Hide Mockup Card on Mobile */
+  .heroVisual {
+    display: none;
+  }
+
+  .scrollPathMobileHide {
+    display: none;
+  }
+
+  .desktopOnly {
+    display: none !important;
   }
 
   .bubbleLeft {
     top: -20px;
-    left: 10px;
+    left: 0px;
+    font-size: 0.8rem;
+    padding: 8px 12px;
   }
-
+  
   .bubbleRight {
     bottom: -20px;
-    right: 10px;
+    right: 0px;
+    font-size: 0.8rem;
+    padding: 8px 12px;
   }
 
-  .mockupCard {
-    aspect-ratio: auto;
-    padding: 32px;
-  }
-
+  /* Decorative elements */
   .decorativeLine {
     display: none;
   }
 
+  /* Problem Section */
+  .problemSection {
+    padding: 80px 16px;
+  }
+  .problemHeading {
+    font-size: 2rem;
+  }
+  .problemDesc {
+    font-size: 1rem;
+  }
+
+  /* Features Section */
+  .features {
+    padding: 80px 16px;
+    gap: 40px;
+  }
+  .featuresHeader {
+    align-items: center;
+    text-align: center;
+  }
+  .featuresTitle {
+    font-size: 2.25rem;
+  }
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .featureCard {
+    padding: 32px 24px;
+  }
+
+  /* Interactive Demo */
+  .interactiveDemo {
+    padding: 60px 0;
+  }
+
+  /* Testimonial */
+  .testimonial {
+    padding: 80px 16px;
+  }
+  .quote {
+    font-size: 1.5rem;
+  }
+
+  /* FAQ */
+  .faq {
+    padding: 80px 16px;
+  }
+  .faqTitle {
+    font-size: 2.5rem;
+  }
+  .faqList {
+    width: 100%;
+  }
+  .faqQuestion {
+    font-size: 1.1rem;
+  }
+
+  /* Final CTA */
+  .finalCta {
+    padding: 100px 16px;
+  }
+  .finalCtaTitle {
+    font-size: 2.5rem;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 60px 16px 40px;
+  }
   .footerInner {
     flex-direction: column;
     align-items: flex-start;
+    gap: 40px;
   }
-
+  .footerBrand {
+    align-items: flex-start;
+    text-align: left;
+  }
   .footerLinks {
     flex-direction: column;
+    align-items: flex-start;
     gap: 16px;
+    width: 100%;
   }
 }

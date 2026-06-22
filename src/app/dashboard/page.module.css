@@ -426,6 +426,87 @@
   opacity: 0.85;
 }
 
+.jobListingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jobActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coverLetterBtn {
+  padding: 6px 14px;
+  background: var(--surface-color-dark);
+  color: var(--text-main);
+  border: 1px solid var(--text-muted);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.coverLetterBtn:hover:not(:disabled) {
+  background: var(--text-main);
+  color: var(--bg-color);
+}
+
+.coverLetterBtn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.coverLetterPanel {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--surface-color-dark);
+  border-radius: 12px;
+  margin-top: 4px;
+}
+
+.clHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.clBadge {
+  font-size: 0.7rem;
+  color: var(--text-main);
+  background: rgba(255,255,255,0.1);
+  padding: 4px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.05em;
+}
+
+.copyBtn {
+  font-size: 0.75rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.copyBtn:hover {
+  color: var(--text-main);
+}
+
+.clText {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
 .linkedinBtn {
   display: flex;
   align-items: center;

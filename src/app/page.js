@@ -2,6 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { auth } from "../lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { useLanguage } from "./context/LanguageContext";
 import { useState, useEffect } from "react";
@@ -18,8 +21,8 @@ import styles from "./page.module.css";
 
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 40 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
   }
@@ -36,6 +39,15 @@ const staggerContainer = {
 export default function Home() {
   const { lang } = useLanguage();
   const [appState, setAppState] = useState('loading'); // 'loading' | 'ready' | 'entering' | 'entered'
+  const [user, setUser] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Artificial load time
@@ -64,7 +76,16 @@ export default function Home() {
       }, 1200);
     }
   };
-  
+
+  const handleAuthRedirect = (e, path) => {
+    e.preventDefault();
+    if (user) {
+      router.push(path);
+    } else {
+      router.push('/login');
+    }
+  };
+
   // Parallax scale down effect for Hero
   const { scrollY } = useScroll();
   const heroScale = useTransform(scrollY, [0, 800], [1, 0.85]);
@@ -74,15 +95,15 @@ export default function Home() {
     signIn: lang === 'id' ? 'Masuk' : 'Sign In',
     title1: lang === 'id' ? 'Temukan' : 'Discover your',
     title2: lang === 'id' ? 'masa depan idealmu.' : 'ideal future.',
-    subtitle: lang === 'id' 
-      ? 'Berhenti menebak-nebak apa yang terjadi setelah lulus. Lakukan wawancara suara real-time dengan AI kami untuk menganalisis bakatmu dan dapatkan roadmap karir yang konkret langkah demi langkah.' 
+    subtitle: lang === 'id'
+      ? 'Berhenti menebak-nebak apa yang terjadi setelah lulus. Lakukan wawancara suara real-time dengan AI kami untuk menganalisis bakatmu dan dapatkan roadmap karir yang konkret langkah demi langkah.'
       : 'Stop guessing about what comes after graduation. Have a real-time voice interview with our AI to analyze your aptitudes and generate a concrete, step-by-step roadmap for your career.',
     startBtn: lang === 'id' ? 'Mulai Wawancara AI' : 'Start AI Interview',
-    viewRoadmap: lang === 'id' ? 'Lihat Contoh Roadmap' : 'View Example Roadmap',
+    viewRoadmap: lang === 'id' ? 'Eksplorasi Fitur Dashboard' : 'Explore Dashboard Features',
     mockLabel: lang === 'id' ? 'Wawancara Berlangsung' : 'Interview In Progress',
     mockText: lang === 'id' ? '"Mari kita bahas tentang subjek yang paling membuatmu bersemangat..."' : '"Let\'s talk about the subjects that energize you the most..."',
-    problemHeading: lang === 'id' 
-      ? 'Kelulusan seharusnya tidak terasa seperti berjalan dengan mata tertutup ke dalam labirin.' 
+    problemHeading: lang === 'id'
+      ? 'Kelulusan seharusnya tidak terasa seperti berjalan dengan mata tertutup ke dalam labirin.'
       : 'Graduation shouldn\'t feel like walking blindfolded into a maze.',
     problemDesc: lang === 'id'
       ? 'Tes karir tradisional sudah usang dan kaku. NeuroPath mengganti pilihan ganda dengan percakapan alami. Kami mendengarkan cara berpikirmu, apa yang kamu pedulikan, dan di mana kelebihanmu—lalu kami buatkan petanya.'
@@ -112,7 +133,7 @@ export default function Home() {
   return (
     <>
       {/* Fixed Preloader Curtain */}
-      <motion.div 
+      <motion.div
         onClick={handleEnter}
         initial={{ y: 0 }}
         animate={{ y: appState === 'entering' || appState === 'entered' ? '-100vh' : 0 }}
@@ -126,330 +147,333 @@ export default function Home() {
           userSelect: 'none'
         }}
       >
-         <motion.div 
-            initial={{ opacity: 0, scale: 0.9, filter: 'blur(5px)' }}
-            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px', height: '80px' }}
-         >
-            <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut", delay: 0.0 }} />
-            <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut", delay: 0.2 }} />
-            <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["50px", "90px", "50px"] }} transition={{ repeat: Infinity, duration: 1.0, ease: "easeInOut", delay: 0.4 }} />
-            <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.6 }} />
-            <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.8 }} />
-         </motion.div>
-         
-         {appState === 'loading' ? (
-           <div style={{ width: '120px', height: '1px', background: 'var(--text-muted)', overflow: 'hidden', position: 'relative' }}>
-              <motion.div 
-                initial={{ x: '-100%' }}
-                animate={{ x: '100%' }}
-                transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-                style={{ position: 'absolute', top: 0, left: 0, width: '40%', height: '100%', background: 'var(--text-main)' }}
-              />
-           </div>
-         ) : (
-           <motion.div
-             initial={{ opacity: 0, y: 10 }}
-             animate={{ opacity: 1, y: 0 }}
-             transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-             style={{ fontSize: '0.8rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-muted)' }}
-           >
-             Klik Dimana Saja Untuk Masuk
-           </motion.div>
-         )}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, filter: 'blur(5px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '40px', height: '80px' }}
+        >
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut", delay: 0.0 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut", delay: 0.2 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["50px", "90px", "50px"] }} transition={{ repeat: Infinity, duration: 1.0, ease: "easeInOut", delay: 0.4 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["35px", "70px", "35px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.6 }} />
+          <motion.div style={{ width: '4px', background: 'var(--text-main)', borderRadius: '4px' }} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut", delay: 0.8 }} />
+        </motion.div>
+
+        {appState === 'loading' ? (
+          <div style={{ width: '120px', height: '1px', background: 'var(--text-muted)', overflow: 'hidden', position: 'relative' }}>
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: '100%' }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+              style={{ position: 'absolute', top: 0, left: 0, width: '40%', height: '100%', background: 'var(--text-main)' }}
+            />
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+            style={{ fontSize: '0.8rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--text-muted)' }}
+          >
+            Klik Dimana Saja Untuk Masuk
+          </motion.div>
+        )}
       </motion.div>
 
       <main className={styles.main}>
         <nav className={styles.navbar}>
-        <div className={styles.logo}>
-          NeuroPath
-        </div>
-        <div className={styles.navLinks}>
-          <ThemeToggle />
-          <LanguageToggle />
-          <MagneticButton>
-            <Link href="/login" className={styles.loginBtn}>{t.signIn}</Link>
-          </MagneticButton>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <motion.section 
-        className={styles.hero}
-        style={{ scale: heroScale, opacity: heroOpacity }}
-      >
-        {/* Transparent Watermark Background */}
-        <div className={styles.heroBackgroundRobot}>
-          <Image 
-            src="/images/hero-side-robot.png" 
-            alt="Futuristic Robot" 
-            fill 
-            style={{ objectFit: 'contain', objectPosition: 'left center' }} 
-            priority
-          />
-        </div>
-
-        <motion.div 
-          className={styles.heroContent}
-          initial="hidden"
-          animate={appState === 'entered' ? "visible" : "hidden"}
-          variants={staggerContainer}
-        >
-          <motion.h1 className={styles.title} variants={fadeUpVariant}>
-            {t.title1} <br />
-            <span className="italic-emphasis">{t.title2}</span>
-          </motion.h1>
-          <motion.p className={styles.subtitle} variants={fadeUpVariant}>
-            {t.subtitle}
-          </motion.p>
-          
-          <motion.div className={styles.ctaGroup} variants={fadeUpVariant}>
+          <div className={styles.logo}>
+            NeuroPath
+          </div>
+          <div className={styles.navLinks}>
+            <ThemeToggle />
+            <LanguageToggle />
             <MagneticButton>
-              <Link href="/interview" className={styles.primaryCta}>
-                {t.startBtn}
-              </Link>
+              <Link href="/login" className={styles.loginBtn}>{t.signIn}</Link>
             </MagneticButton>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <motion.section
+          className={styles.hero}
+          style={{ scale: heroScale, opacity: heroOpacity }}
+        >
+          {/* Transparent Watermark Background */}
+          <div className={styles.heroBackgroundRobot}>
+            <Image
+              src="/images/hero-side-robot.png"
+              alt="Futuristic Robot"
+              fill
+              style={{ objectFit: 'contain', objectPosition: 'left center' }}
+              priority
+            />
+          </div>
+
+          <motion.div
+            className={styles.heroContent}
+            initial="hidden"
+            animate={appState === 'entered' ? "visible" : "hidden"}
+            variants={staggerContainer}
+          >
+            <motion.h1 className={styles.title} variants={fadeUpVariant}>
+              {t.title1} <br />
+              <span className="italic-emphasis">{t.title2}</span>
+            </motion.h1>
+            <motion.p className={styles.subtitle} variants={fadeUpVariant}>
+              {t.subtitle}
+            </motion.p>
+
+            <motion.div className={styles.ctaGroup} variants={fadeUpVariant}>
+              <MagneticButton>
+                <a href="/interview" onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.primaryCta}>
+                  {t.startBtn}
+                </a>
+              </MagneticButton>
+              <MagneticButton>
+                <a href="/dashboard" onClick={(e) => handleAuthRedirect(e, '/dashboard')} className={styles.secondaryCta}>
+                  {t.viewRoadmap}
+                </a>
+              </MagneticButton>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            className={styles.heroVisual}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={appState === 'entered' ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+          >
+            {/* Animated Voice Bubbles */}
+            <motion.div
+              className={`${styles.voiceBubble} ${styles.bubbleLeft}`}
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              "I feel lost..."
+            </motion.div>
+            <motion.div
+              className={`${styles.voiceBubble} ${styles.bubbleRight}`}
+              animate={{ y: [0, 15, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            >
+              "What do you enjoy doing?"
+            </motion.div>
+
+            <TiltCard className={styles.mockupCard}>
+              <span className={styles.mockupLabel}>{t.mockLabel}</span>
+              <p className={styles.mockupText}>{t.mockText}</p>
+
+              {/* Audio Wave Animation inside card */}
+              <div className={styles.audioWaveContainer}>
+                <motion.div className={styles.waveBar} animate={{ height: ["10px", "30px", "10px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} />
+                <motion.div className={styles.waveBar} animate={{ height: ["15px", "45px", "15px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.2 }} />
+                <motion.div className={styles.waveBar} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut", delay: 0.4 }} />
+                <motion.div className={styles.waveBar} animate={{ height: ["10px", "35px", "10px"] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut", delay: 0.1 }} />
+              </div>
+
+              {/* Live Analysis UI to fill the empty bottom space */}
+              <div className={styles.liveAnalysisContainer}>
+                <div className={styles.traitTags}>
+                  <motion.span
+                    className={styles.traitTag}
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1 }}
+                  >Creative Problem Solving</motion.span>
+                  <motion.span
+                    className={styles.traitTag}
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 2.5 }}
+                  >High Empathy</motion.span>
+                  <motion.span
+                    className={styles.traitTag}
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 4 }}
+                  >Visual Thinker</motion.span>
+                </div>
+                <div className={styles.scanningBox}>
+                  <motion.div
+                    className={styles.scanLine}
+                    animate={{ left: ["-10%", "110%"] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  />
+                  <motion.span
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    Mapping to Design cluster...
+                  </motion.span>
+                </div>
+              </div>
+            </TiltCard>
+          </motion.div>
+        </motion.section>
+
+        {/* Problem Statement Section (BLACK BACKGROUND) */}
+        <div className={styles.contentWrapper}>
+          <div className={styles.scrollPathMobileHide}>
+            <ScrollPath />
+          </div>
+
+          {/* Infinite scrolling career paths as a transition from Hero */}
+          <InfiniteMarquee />
+
+          <motion.section
+            className={`${styles.problemSection} ${styles.sectionDark}`}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: "-100px" }}
+            variants={staggerContainer}
+          >
+            {/* Scroll-Triggered Text Reveal for the large heading */}
+            <TextReveal
+              text={t.problemHeading}
+              className={styles.problemHeading}
+            />
+            <motion.p className={styles.problemDesc} variants={fadeUpVariant}>
+              {t.problemDesc}
+            </motion.p>
+          </motion.section>
+
+          {/* Features Section */}
+          <motion.section
+            className={styles.features}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: "-100px" }}
+            variants={staggerContainer}
+          >
+            <motion.div className={styles.featuresHeader} variants={fadeUpVariant}>
+              <TextReveal
+                text={t.howTitle}
+                className={styles.featuresTitle}
+              />
+              <p className={styles.featuresSubtitle}>{t.howSubtitle}</p>
+            </motion.div>
+
+            <motion.div className={styles.featureGrid} variants={staggerContainer}>
+              <motion.div variants={fadeUpVariant}>
+                <TiltCard className={styles.featureCard}>
+                  <div className={styles.featureNumber}>01</div>
+                  <h3 className={styles.featureName}>{t.f1Title}</h3>
+                  <p className={styles.featureDesc}>{t.f1Desc}</p>
+                </TiltCard>
+              </motion.div>
+              <motion.div variants={fadeUpVariant}>
+                <TiltCard className={styles.featureCard}>
+                  <div className={styles.featureNumber}>02</div>
+                  <h3 className={styles.featureName}>{t.f2Title}</h3>
+                  <p className={styles.featureDesc}>{t.f2Desc}</p>
+                </TiltCard>
+              </motion.div>
+              <motion.div variants={fadeUpVariant}>
+                <TiltCard className={styles.featureCard}>
+                  <div className={styles.featureNumber}>03</div>
+                  <h3 className={styles.featureName}>{t.f3Title}</h3>
+                  <p className={styles.featureDesc}>{t.f3Desc}</p>
+                </TiltCard>
+              </motion.div>
+
+              <motion.div variants={fadeUpVariant} style={{ gridColumn: "1 / -1" }}>
+                <SkillTreeRoadmap />
+              </motion.div>
+            </motion.div>
+          </motion.section>
+
+          {/* 3D Interactive Core Section */}
+          <div className={styles.desktopOnly}>
+            <Interactive3DSection />
+          </div>
+
+          {/* Testimonials Section */}
+          <motion.section
+            className={styles.testimonials}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: "-100px" }}
+            variants={fadeUpVariant}
+          >
+            <div className={styles.testimonialContent}>
+              <TextReveal
+                text={t.testimonial}
+                className={styles.testimonialTitle}
+              />
+              <div className={styles.authorGroup}>
+                <div className={styles.authorAvatar}>S</div>
+                <div className={styles.authorInfo}>
+                  <span className={styles.authorName}>Sarah L.</span>
+                  <span className={styles.authorRole}>{t.testRole}</span>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+
+          {/* FAQ Section */}
+          <motion.section
+            className={styles.faq}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: "-100px" }}
+            variants={staggerContainer}
+          >
+            <motion.div className={styles.faqHeader} variants={fadeUpVariant}>
+              <TextReveal
+                text={t.faqTitle}
+                className={styles.faqTitle}
+              />
+            </motion.div>
+            <div className={styles.faqList}>
+              <motion.div className={styles.faqItem} variants={fadeUpVariant}>
+                <h3 className={styles.faqQuestion}>{t.q1}</h3>
+                <p className={styles.faqAnswer}>{t.a1}</p>
+              </motion.div>
+              <motion.div className={styles.faqItem} variants={fadeUpVariant}>
+                <h3 className={styles.faqQuestion}>{t.q2}</h3>
+                <p className={styles.faqAnswer}>{t.a2}</p>
+              </motion.div>
+              <motion.div className={styles.faqItem} variants={fadeUpVariant}>
+                <h3 className={styles.faqQuestion}>{t.q3}</h3>
+                <p className={styles.faqAnswer}>{t.a3}</p>
+              </motion.div>
+            </div>
+          </motion.section>
+
+          {/* Final CTA (BLACK BACKGROUND) */}
+          <motion.section
+            className={`${styles.finalCta} ${styles.sectionDark}`}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, margin: "-100px" }}
+            variants={fadeUpVariant}
+          >
+            <TextReveal
+              text={t.ctaTitle}
+              className={styles.finalCtaTitle}
+            />
             <MagneticButton>
-              <Link href="/dashboard" className={styles.secondaryCta}>
-                {t.viewRoadmap}
-              </Link>
+              <a href="/interview" onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.finalCtaBtn}>
+                {t.ctaBtn}
+              </a>
             </MagneticButton>
-          </motion.div>
-        </motion.div>
-        
-        <motion.div 
-          className={styles.heroVisual}
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={appState === 'entered' ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-        >
-          {/* Animated Voice Bubbles */}
-          <motion.div 
-            className={`${styles.voiceBubble} ${styles.bubbleLeft}`}
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            "I feel lost..."
-          </motion.div>
-          <motion.div 
-            className={`${styles.voiceBubble} ${styles.bubbleRight}`}
-            animate={{ y: [0, 15, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          >
-            "What do you enjoy doing?"
-          </motion.div>
+          </motion.section>
 
-          <TiltCard className={styles.mockupCard}>
-            <span className={styles.mockupLabel}>{t.mockLabel}</span>
-            <p className={styles.mockupText}>{t.mockText}</p>
-            
-            {/* Audio Wave Animation inside card */}
-            <div className={styles.audioWaveContainer}>
-               <motion.div className={styles.waveBar} animate={{ height: ["10px", "30px", "10px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} />
-               <motion.div className={styles.waveBar} animate={{ height: ["15px", "45px", "15px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.2 }} />
-               <motion.div className={styles.waveBar} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut", delay: 0.4 }} />
-               <motion.div className={styles.waveBar} animate={{ height: ["10px", "35px", "10px"] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut", delay: 0.1 }} />
-            </div>
-
-            {/* Live Analysis UI to fill the empty bottom space */}
-            <div className={styles.liveAnalysisContainer}>
-              <div className={styles.analysisHeader}>
-                <span className={styles.analysisBlinker}></span>
-                LIVE ANALYSIS
+          {/* Footer */}
+          <footer className={styles.footer}>
+            <div className={styles.footerInner}>
+              <div className={styles.footerBrand}>
+                <span className={styles.footerLogo}>NeuroPath</span>
+                <p className={styles.footerTagline}>{t.footerTagline}</p>
+                <p className={styles.footerTagline} style={{ marginTop: '8px', fontSize: '0.85rem' }}>
+                  &copy; {new Date().getFullYear()} Anjali Saputra
+                </p>
               </div>
-              <div className={styles.traitTags}>
-                <motion.span 
-                  className={styles.traitTag}
-                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1 }}
-                >Creative Problem Solving</motion.span>
-                <motion.span 
-                  className={styles.traitTag}
-                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 2.5 }}
-                >High Empathy</motion.span>
-                <motion.span 
-                  className={styles.traitTag}
-                  initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 4 }}
-                >Visual Thinker</motion.span>
-              </div>
-              <div className={styles.scanningBox}>
-                <motion.div 
-                  className={styles.scanLine} 
-                  animate={{ left: ["-10%", "110%"] }} 
-                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                />
-                <motion.span 
-                  animate={{ opacity: [0.4, 1, 0.4] }} 
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  Mapping to Design cluster...
-                </motion.span>
+              <div className={styles.footerLinks}>
+                <Link href="/login" className={styles.footerLink}>{t.signIn}</Link>
+                <Link href="/interview" className={styles.footerLink}>{t.startBtn}</Link>
+                <a href="https://openclaw.ai" target="_blank" rel="noreferrer" className={styles.footerLink}>Powered by Openclaw</a>
               </div>
             </div>
-          </TiltCard>
-        </motion.div>
-      </motion.section>
-
-      {/* Problem Statement Section (BLACK BACKGROUND) */}
-      <div className={styles.contentWrapper}>
-        <ScrollPath />
-        
-        {/* Infinite scrolling career paths as a transition from Hero */}
-        <InfiniteMarquee />
-
-        <motion.section 
-          className={`${styles.problemSection} ${styles.sectionDark}`}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: "-100px" }}
-          variants={staggerContainer}
-        >
-          {/* Scroll-Triggered Text Reveal for the large heading */}
-          <TextReveal 
-            text={t.problemHeading} 
-            className={styles.problemHeading} 
-          />
-          <motion.p className={styles.problemDesc} variants={fadeUpVariant}>
-            {t.problemDesc}
-          </motion.p>
-        </motion.section>
-
-        {/* Features Section */}
-        <motion.section 
-          className={styles.features}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: "-100px" }}
-          variants={staggerContainer}
-        >
-          <motion.div className={styles.featuresHeader} variants={fadeUpVariant}>
-            <TextReveal 
-              text={t.howTitle}
-              className={styles.featuresTitle}
-            />
-            <p className={styles.featuresSubtitle}>{t.howSubtitle}</p>
-          </motion.div>
-          
-          <motion.div className={styles.featureGrid} variants={staggerContainer}>
-            <motion.div variants={fadeUpVariant}>
-              <TiltCard className={styles.featureCard}>
-                <div className={styles.featureNumber}>01</div>
-                <h3 className={styles.featureName}>{t.f1Title}</h3>
-                <p className={styles.featureDesc}>{t.f1Desc}</p>
-              </TiltCard>
-            </motion.div>
-            <motion.div variants={fadeUpVariant}>
-              <TiltCard className={styles.featureCard}>
-                <div className={styles.featureNumber}>02</div>
-                <h3 className={styles.featureName}>{t.f2Title}</h3>
-                <p className={styles.featureDesc}>{t.f2Desc}</p>
-              </TiltCard>
-            </motion.div>
-            <motion.div variants={fadeUpVariant}>
-              <TiltCard className={styles.featureCard}>
-                <div className={styles.featureNumber}>03</div>
-                <h3 className={styles.featureName}>{t.f3Title}</h3>
-                <p className={styles.featureDesc}>{t.f3Desc}</p>
-              </TiltCard>
-            </motion.div>
-            
-            <motion.div variants={fadeUpVariant} style={{ gridColumn: "1 / -1" }}>
-              <SkillTreeRoadmap />
-            </motion.div>
-          </motion.div>
-        </motion.section>
-
-        {/* 3D Interactive Core Section */}
-        <Interactive3DSection />
-
-        {/* Testimonials Section */}
-        <motion.section 
-          className={styles.testimonials}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: "-100px" }}
-          variants={fadeUpVariant}
-        >
-          <div className={styles.testimonialContent}>
-            <TextReveal 
-              text={t.testimonial}
-              className={styles.testimonialTitle}
-            />
-            <div className={styles.authorGroup}>
-              <div className={styles.authorAvatar}>S</div>
-              <div className={styles.authorInfo}>
-                <span className={styles.authorName}>Sarah L.</span>
-                <span className={styles.authorRole}>{t.testRole}</span>
-              </div>
-            </div>
-          </div>
-        </motion.section>
-
-        {/* FAQ Section */}
-        <motion.section 
-          className={styles.faq}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: "-100px" }}
-          variants={staggerContainer}
-        >
-          <motion.div className={styles.faqHeader} variants={fadeUpVariant}>
-            <TextReveal 
-              text={t.faqTitle}
-              className={styles.faqTitle}
-            />
-          </motion.div>
-          <div className={styles.faqList}>
-            <motion.div className={styles.faqItem} variants={fadeUpVariant}>
-              <h3 className={styles.faqQuestion}>{t.q1}</h3>
-              <p className={styles.faqAnswer}>{t.a1}</p>
-            </motion.div>
-            <motion.div className={styles.faqItem} variants={fadeUpVariant}>
-              <h3 className={styles.faqQuestion}>{t.q2}</h3>
-              <p className={styles.faqAnswer}>{t.a2}</p>
-            </motion.div>
-            <motion.div className={styles.faqItem} variants={fadeUpVariant}>
-              <h3 className={styles.faqQuestion}>{t.q3}</h3>
-              <p className={styles.faqAnswer}>{t.a3}</p>
-            </motion.div>
-          </div>
-        </motion.section>
-
-        {/* Final CTA (BLACK BACKGROUND) */}
-        <motion.section 
-          className={`${styles.finalCta} ${styles.sectionDark}`}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, margin: "-100px" }}
-          variants={fadeUpVariant}
-        >
-          <TextReveal 
-            text={t.ctaTitle}
-            className={styles.finalCtaTitle}
-          />
-          <MagneticButton>
-            <Link href="/interview" className={styles.finalCtaBtn}>
-              {t.ctaBtn}
-            </Link>
-          </MagneticButton>
-        </motion.section>
-
-        {/* Footer */}
-        <footer className={styles.footer}>
-          <div className={styles.footerInner}>
-            <div className={styles.footerBrand}>
-              <span className={styles.footerLogo}>NeuroPath</span>
-              <p className={styles.footerTagline}>{t.footerTagline}</p>
-            </div>
-            <div className={styles.footerLinks}>
-              <Link href="/login" className={styles.footerLink}>{t.signIn}</Link>
-              <Link href="/interview" className={styles.footerLink}>{t.startBtn}</Link>
-              <a href="https://openclaw.ai" target="_blank" rel="noreferrer" className={styles.footerLink}>Powered by Openclaw</a>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </main>
+          </footer>
+        </div>
+      </main>
     </>
   );
 }
