@@ -138,16 +138,15 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
           </div>
         )}
 
-        {isUnlocked && (
+        {isUnlocked && !displayHash && (
           <button
             className={styles.mintBtn}
             onClick={handleMint}
             disabled={minting}
-            style={displayHash ? { marginTop: '16px', backgroundColor: 'var(--surface-color)' } : {}}
           >
             {minting
               ? (lang === 'id' ? 'Mencetak...' : 'Minting...')
-              : (displayHash ? (lang === 'id' ? 'Cetak Ulang (Test)' : 'Re-Mint (Test)') : (lang === 'id' ? 'Cetak Sertifikat' : 'Mint Certificate'))
+              : (lang === 'id' ? 'Cetak Sertifikat' : 'Mint Certificate')
             }
           </button>
         )}

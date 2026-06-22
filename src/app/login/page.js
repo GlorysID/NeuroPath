@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebase";
+import { GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../lib/firebase";
 import styles from "./page.module.css";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,10 +13,14 @@ import { useLanguage } from "../context/LanguageContext";
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showGoogleNameForm, setShowGoogleNameForm] = useState(false);
+  const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const router = useRouter();
   const { lang } = useLanguage();
 
@@ -39,10 +44,22 @@ export default function Login() {
     formTitleSignUp: lang === 'id' ? 'Buat Akun' : 'Create Account',
     formSubSignUp: lang === 'id' ? 'Mulai perjalananmu untuk menemukan masa depan idealmu.' : 'Start your journey to discover your ideal future.',
     
+    nameLabel: lang === 'id' ? 'Nama Lengkap' : 'Full Name',
     emailLabel: lang === 'id' ? 'Alamat Email' : 'Email Address',
     passwordLabel: lang === 'id' ? 'Kata Sandi' : 'Password',
     submitSignIn: lang === 'id' ? 'Masuk' : 'Sign In',
     submitSignUp: lang === 'id' ? 'Daftar' : 'Sign Up',
+    googleSignText: lang === 'id' ? 'Lanjutkan dengan Google' : 'Continue with Google',
+    orText: lang === 'id' ? 'ATAU' : 'OR',
+    
+    emailSentTitle: lang === 'id' ? 'Verifikasi Email Anda' : 'Verify Your Email',
+    emailSentDesc: lang === 'id' ? 'Kami telah mengirimkan tautan verifikasi ke email Anda. Silakan klik tautan tersebut untuk mengaktifkan akun Anda sebelum masuk.' : 'We\'ve sent a verification link to your email. Please click the link to activate your account before signing in.',
+    emailSentWait: lang === 'id' ? 'Tidak menerima email? Periksa folder spam Anda.' : 'Didn\'t receive it? Check your spam folder.',
+    errUnverified: lang === 'id' ? 'Akun Anda belum diverifikasi. Silakan periksa email Anda.' : 'Your account is not verified yet. Please check your email.',
+    
+    titleGoogleForm: lang === 'id' ? 'Lengkapi Profil Anda' : 'Complete Profile',
+    subGoogleForm: lang === 'id' ? 'Silakan masukkan nama lengkap Anda untuk melanjutkan.' : 'Please enter your full name to continue.',
+    btnGoogleForm: lang === 'id' ? 'Lanjutkan' : 'Continue',
     
     noAccount: lang === 'id' ? 'Belum punya akun?' : 'Don\'t have an account?',
     haveAccount: lang === 'id' ? 'Sudah punya akun?' : 'Already have an account?',
@@ -64,13 +81,41 @@ export default function Login() {
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
-        router.push("/dashboard");
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (!userCredential.user.emailVerified) {
+          await signOut(auth);
+          setError(t.errUnverified);
+          setLoading(false);
+          return;
+        }
+
+        const docRef = doc(db, "users", userCredential.user.uid);
+        const docSnap = await getDoc(docRef);
+        let hasProfile = false;
+        if (docSnap.exists() && docSnap.data().profile) {
+          hasProfile = true;
+        }
+
+        if (hasProfile) {
+          router.push("/dashboard");
+        } else {
+          router.push("/interview");
+        }
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
-        router.push("/interview");
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        await setDoc(doc(db, "users", user.uid), { 
+          name: name,
+          email: email 
+        }, { merge: true });
+
+        await sendEmailVerification(user);
+        await signOut(auth); // Sign them out so they have to verify first
+        setEmailSent(true);
       }
     } catch (err) {
+      console.error(err);
       let friendlyMessage = err.message;
       if (err.code === 'auth/invalid-credential') {
         friendlyMessage = t.errInvalidCred;
@@ -84,6 +129,65 @@ export default function Login() {
         friendlyMessage = t.errNetwork;
       }
       setError(friendlyMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const additionalInfo = getAdditionalUserInfo(result);
+
+      if (additionalInfo?.isNewUser) {
+        // Pre-fill name if it exists from Google, but force them to confirm/edit it
+        if (user.displayName) {
+          setName(user.displayName);
+        }
+        setPendingGoogleUser(user);
+        setShowGoogleNameForm(true);
+      } else {
+        // For returning users, check if they have completed the interview
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        let hasProfile = false;
+        if (docSnap.exists() && docSnap.data().profile) {
+          hasProfile = true;
+        }
+
+        await setDoc(docRef, { 
+          email: user.email 
+        }, { merge: true });
+
+        if (hasProfile) {
+          router.push("/dashboard");
+        } else {
+          router.push("/interview");
+        }
+      }
+    } catch (err) {
+      console.error("Google Auth Error:", err);
+      setError(err.message || t.errNetwork);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleNameSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await setDoc(doc(db, "users", pendingGoogleUser.uid), { 
+        name: name,
+        email: pendingGoogleUser.email 
+      }, { merge: true });
+      router.push("/interview");
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -190,87 +294,178 @@ export default function Login() {
         >
           <div className={styles.formContainer}>
             <AnimatePresence mode="wait">
-              <motion.div
-                key={isLogin ? "form-signin" : "form-signup"}
-                initial={{ opacity: 0, x: isLogin ? 30 : -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: isLogin ? -30 : 30 }}
-                transition={{ duration: 0.2, delay: 0.1 }}
-                className={styles.formInner}
-              >
-                <div className={styles.formHeader}>
+              {showGoogleNameForm ? (
+                <motion.div
+                  key="form-google-name"
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -30 }}
+                  transition={{ duration: 0.2 }}
+                  className={styles.formInner}
+                >
+                  <div className={styles.formHeader}>
+                    <h2 className={styles.formTitle}>{t.titleGoogleForm}</h2>
+                    <p className={styles.formSubtitle}>{t.subGoogleForm}</p>
+                  </div>
+
+                  {error && <div className={styles.error}>{error}</div>}
+
+                  <form className={styles.form} onSubmit={handleGoogleNameSubmit}>
+                    <div className={styles.inputGroup}>
+                      <input
+                        type="text"
+                        className={styles.input}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        placeholder=" "
+                        id="googleName"
+                      />
+                      <label htmlFor="googleName" className={styles.floatingLabel}>
+                        {t.nameLabel}
+                      </label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className={styles.submitBtn}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className={styles.spinner}></span>
+                      ) : (
+                        t.btnGoogleForm
+                      )}
+                    </button>
+                  </form>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={isLogin ? "form-signin" : "form-signup"}
+                  initial={{ opacity: 0, x: isLogin ? 30 : -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: isLogin ? -30 : 30 }}
+                  transition={{ duration: 0.2, delay: 0.1 }}
+                  className={styles.formInner}
+                >
+                  <div className={styles.formHeader}>
                   <h2 className={styles.formTitle}>
-                    {isLogin ? t.formTitleSignIn : t.formTitleSignUp}
+                    {emailSent ? t.emailSentTitle : isLogin ? t.formTitleSignIn : t.formTitleSignUp}
                   </h2>
                   <p className={styles.formSubtitle}>
-                    {isLogin
-                      ? t.formSubSignIn
-                      : t.formSubSignUp}
+                    {emailSent ? t.emailSentDesc : isLogin ? t.formSubSignIn : t.formSubSignUp}
                   </p>
                 </div>
 
                 {error && <div className={styles.error}>{error}</div>}
 
-                <form className={styles.form} onSubmit={handleAuth}>
-                  <div className={styles.inputGroup}>
-                    <input
-                      type="email"
-                      className={styles.input}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder=" "
-                      id="email"
-                    />
-                    <label htmlFor="email" className={styles.floatingLabel}>
-                      {t.emailLabel}
-                    </label>
+                {emailSent ? (
+                  <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" strokeWidth="1.5" style={{ marginBottom: '24px' }}>
+                      <path d="M22 12.08V12a10 10 0 1 1-5.93-9.14" strokeLinecap="round"/><polyline points="22 4 12 14.01 9 11.01" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <p className={styles.mobileToggle}>{t.emailSentWait}</p>
+                    <button type="button" className={styles.submitBtn} onClick={() => { setEmailSent(false); setIsLogin(true); }} style={{ marginTop: '30px', width: '100%' }}>
+                      {lang === 'id' ? 'Ke Halaman Masuk' : 'Go to Sign In'}
+                    </button>
                   </div>
+                ) : (
+                  <>
+                    <form className={styles.form} onSubmit={handleAuth}>
+                      {!isLogin && (
+                        <div className={styles.inputGroup}>
+                          <input
+                            type="text"
+                            className={styles.input}
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            placeholder=" "
+                            id="name"
+                          />
+                          <label htmlFor="name" className={styles.floatingLabel}>
+                            {t.nameLabel}
+                          </label>
+                        </div>
+                      )}
 
-                  <div className={styles.inputGroup}>
-                    <input
-                      type="password"
-                      className={styles.input}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      placeholder=" "
-                      id="password"
-                    />
-                    <label htmlFor="password" className={styles.floatingLabel}>
-                      {t.passwordLabel}
-                    </label>
-                  </div>
+                      <div className={styles.inputGroup}>
+                        <input
+                          type="email"
+                          className={styles.input}
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          placeholder=" "
+                          id="email"
+                        />
+                        <label htmlFor="email" className={styles.floatingLabel}>
+                          {t.emailLabel}
+                        </label>
+                      </div>
 
-                  <button
-                    type="submit"
-                    className={styles.submitBtn}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className={styles.spinner}></span>
-                    ) : isLogin ? (
-                      t.submitSignIn
-                    ) : (
-                      t.submitSignUp
-                    )}
-                  </button>
-                </form>
+                      <div className={styles.inputGroup}>
+                        <input
+                          type="password"
+                          className={styles.input}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          placeholder=" "
+                          id="password"
+                        />
+                        <label htmlFor="password" className={styles.floatingLabel}>
+                          {t.passwordLabel}
+                        </label>
+                      </div>
 
-                {/* Mobile-only toggle (branding panel hidden on small screens) */}
-                <p className={styles.mobileToggle}>
-                  {isLogin
-                    ? t.noAccount
-                    : t.haveAccount}
-                  <button
-                    type="button"
-                    className={styles.mobileToggleLink}
-                    onClick={() => setIsLogin(!isLogin)}
-                  >
-                    {isLogin ? t.toggleSignUp : t.toggleSignIn}
-                  </button>
-                </p>
-              </motion.div>
+                      <button
+                        type="submit"
+                        className={styles.submitBtn}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <span className={styles.spinner}></span>
+                        ) : isLogin ? (
+                          t.submitSignIn
+                        ) : (
+                          t.submitSignUp
+                        )}
+                      </button>
+                      
+                      <div className={styles.separator}>{t.orText}</div>
+                      
+                      <button
+                        type="button"
+                        onClick={handleGoogleAuth}
+                        className={styles.googleBtn}
+                        disabled={loading}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        {t.googleSignText}
+                      </button>
+                    </form>
+
+                    {/* Mobile-only toggle */}
+                    <p className={styles.mobileToggle}>
+                      {isLogin ? t.noAccount : t.haveAccount}
+                      <button
+                        type="button"
+                        className={styles.mobileToggleLink}
+                        onClick={() => setIsLogin(!isLogin)}
+                      >
+                        {isLogin ? t.toggleSignUp : t.toggleSignIn}
+                      </button>
+                    </p>
+                  </>
+                )}
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </motion.div>
