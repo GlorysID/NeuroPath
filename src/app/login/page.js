@@ -26,10 +26,10 @@ export default function Login() {
       : 'Join the elite network of professionals mapping their neural pathways to the perfect career trajectory.',
     btnSignIn: lang === 'id' ? 'Buat Akun' : 'Create an Account',
     
-    titleSignUp: lang === 'id' ? 'Selamat Datang Kembali, Arsitek' : 'Welcome Back, Architect',
+    titleSignUp: lang === 'id' ? 'Selamat Datang, Arsitek Masa Depan' : 'Welcome Back, Future Architect',
     subSignUp: lang === 'id' 
-      ? 'Peta kognitifmu sudah menunggu. Masuk untuk melanjutkan membangun peta karirmu.' 
-      : 'Your cognitive map is waiting. Sign in to continue building your career roadmap.',
+      ? 'Peta kognitif Anda telah menanti. Masuk untuk melanjutkan merancang peta karir personal Anda.' 
+      : 'Your cognitive map is waiting. Sign in to continue building your personalized career roadmap.',
     btnSignUp: lang === 'id' ? 'Masuk Sebagai Gantinya' : 'Sign In Instead',
     
     mockupText: lang === 'id' ? '"Mari kita bahas tentang subjek yang paling membuatmu bersemangat..."' : '"Let\'s talk about the subjects that energize you the most..."',
@@ -108,7 +108,7 @@ export default function Login() {
           transition={springTransition}
           style={{ order: isLogin ? 0 : 1 }}
         >
-          <div className={styles.visualContent}>
+          <div className={`${styles.visualContent} ${!isLogin ? styles.contentRight : ''}`}>
             <Link href="/" className={styles.logo}>NeuroPath</Link>
 
             <div className={styles.brandBody}>
@@ -152,47 +152,10 @@ export default function Login() {
               </AnimatePresence>
             </div>
 
-            {/* ---- BORROWED ELEMENTS FROM LANDING PAGE ---- */}
-
-            {/* Mockup Card (like the TiltCard on the hero) */}
-            <motion.div
-              className={styles.mockupCard}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-            >
-              <p className={styles.mockupText}>
-                {t.mockupText}
-              </p>
-
-              {/* Audio wave bars (from landing hero) */}
-              <div className={styles.audioWaveContainer}>
-                 <motion.div className={styles.waveBar} animate={{ height: ["10px", "30px", "10px"] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} />
-                 <motion.div className={styles.waveBar} animate={{ height: ["15px", "45px", "15px"] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut", delay: 0.2 }} />
-                 <motion.div className={styles.waveBar} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut", delay: 0.4 }} />
-                 <motion.div className={styles.waveBar} animate={{ height: ["10px", "35px", "10px"] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut", delay: 0.1 }} />
-              </div>
-
-              {/* Live analysis trait tags (from landing hero) */}
-              <div className={styles.liveAnalysis}>
-                <div className={styles.traitTags}>
-                  {traits.map((trait, i) => (
-                    <motion.span
-                      key={trait}
-                      className={styles.traitTag}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 1.2 + i * 1.2 }}
-                    >
-                      {trait}
-                    </motion.span>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+            {/* ---- BACKGROUND ELEMENTS ---- */}
 
             {/* Background robot image (from landing hero) */}
-            <div className={styles.heroRobotBg}>
+            <div className={`${styles.heroRobotBg} ${!isLogin ? styles.robotMirrored : ''}`}>
               <Image
                 src="/images/hero-side-robot.png"
                 alt=""

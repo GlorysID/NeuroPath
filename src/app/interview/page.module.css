@@ -37,6 +37,16 @@
   pointer-events: none; /* Let clicks pass to 3D if needed */
 }
 
+.topControls {
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  z-index: 100;
+  display: flex;
+  gap: 15px;
+  pointer-events: auto;
+}
+
 /* History */
 .transcriptContainer {
   flex: 1;
@@ -361,9 +371,6 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 1024px) {
-  .container {
-    flex-direction: column;
-  }
   .coreContainer {
     width: 100vw;
     height: 55vh;
@@ -372,11 +379,74 @@
   }
   .chatInterface {
     width: 100vw;
-    height: 60vh; /* Overlap slightly */
-    padding: 30px;
+    height: 100vh;
+    padding: 40vh 24px 40px 24px;
     background: linear-gradient(to top, var(--bg-color) 60%, transparent 100%);
   }
+  .topControls {
+    top: 20px;
+    left: 20px;
+  }
+  .transcriptContainer {
+    margin-bottom: 24px;
+  }
   .message.ai.latest {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
+  }
+  .message.user {
+    padding: 12px 18px;
+    font-size: 1rem;
+    max-width: 90%;
+  }
+  .terminalInput {
+    padding: 18px 24px;
+    padding-right: 110px;
+    font-size: 1rem;
+  }
+  .micBtn {
+    width: 40px;
+    height: 40px;
+    right: 70px;
+  }
+  .submitBtn {
+    width: 40px;
+    height: 40px;
+    right: 16px;
+  }
+  .progressBarContainer {
+    right: 10px;
+    height: 40vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .coreContainer {
+    height: 50vh;
+  }
+  .chatInterface {
+    padding: 45vh 16px 30px 16px;
+    background: linear-gradient(to top, var(--bg-color) 55%, transparent 100%);
+  }
+  .topControls {
+    top: 20px;
+    left: 16px;
+    gap: 10px;
+  }
+  .message.ai.latest {
+    font-size: 1.3rem;
+  }
+  .message.user {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+  .terminalInput {
+    padding: 16px 20px;
+    padding-right: 100px;
+    font-size: 0.95rem;
+  }
+  .interimText {
+    font-size: 0.85rem;
+    padding: 6px 14px;
+    bottom: calc(100% + 10px);
   }
 }

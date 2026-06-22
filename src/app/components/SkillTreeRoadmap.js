@@ -93,8 +93,8 @@ export default function SkillTreeRoadmap({ className, milestones }) {
   };
 
   return (
-    <div className={className} style={{ width: "100%", padding: "40px", display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "64px", zIndex: 2 }}>
+    <div className={`${className} ${styles.mainWrapper}`}>
+      <div className={styles.headerFlex}>
         <div>
           <h3 style={{ margin: 0, fontSize: "1.2rem", fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.05em", color: "var(--text-main)" }}>NEURAL PATHWAY</h3>
           <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>

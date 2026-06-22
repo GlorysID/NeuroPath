@@ -37,6 +37,20 @@
   flex-direction: column;
   justify-content: center;
   padding: 60px;
+  transition: align-items 0.4s ease;
+}
+
+.contentRight {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.contentRight .brandTextWrap {
+  align-items: flex-end;
+}
+
+.contentRight .panelToggleBtn {
+  align-self: flex-end;
 }
 
 .logo {
@@ -50,6 +64,12 @@
   text-decoration: none;
   letter-spacing: -0.03em;
   z-index: 10;
+  transition: left 0.4s ease, right 0.4s ease;
+}
+
+.contentRight .logo {
+  left: auto;
+  right: 60px;
 }
 
 .brandBody {
@@ -227,6 +247,14 @@
   z-index: 1;
   opacity: 0.07;
   pointer-events: none;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.robotMirrored {
+  transform: scaleX(-1);
+  opacity: 0.07;
+  left: auto;
+  right: -125px;
 }
 
 /* Decorative background orbs */
@@ -330,6 +358,15 @@
 .input:focus {
   outline: none;
   border-bottom-color: var(--text-main);
+}
+
+/* Fix WebKit Autofill Background Issue in Dark Mode */
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text-main) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .floatingLabel {

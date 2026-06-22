@@ -276,7 +276,7 @@ export default function ProfilePage() {
             </h1>
             <p className={styles.subtitle}>{t.subtitle}</p>
           </motion.div>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div className={styles.headerToggles}>
             <ThemeToggle />
             <LanguageToggle />
           </div>
@@ -359,13 +359,7 @@ export default function ProfilePage() {
                 </div>
                 <span className={styles.settingChip}>{lang === 'id' ? '🇮🇩 ID' : '🇬🇧 EN'}</span>
               </div>
-              <div className={styles.settingRow}>
-                <div className={styles.settingLabel}>
-                  <span className={styles.settingTitle}>{t.theme}</span>
-                  <span className={styles.settingDesc}>{t.themeDesc}</span>
-                </div>
-                <ThemeToggle />
-              </div>
+
               <div className={styles.settingRow}>
                 <div className={styles.settingLabel}>
                   <span className={styles.settingTitle}>{t.joined}</span>
@@ -398,7 +392,7 @@ export default function ProfilePage() {
           >
             <div className={styles.cardHeader}>{lang === 'id' ? 'Dimensi Kognitif' : 'Cognitive Dimensions'}</div>
             {interviewHistory.length > 0 && interviewHistory[interviewHistory.length - 1].extracted ? (
-              <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center', marginTop: '-20px' }}>
+              <div className={styles.profileRadarWrap}>
                 <RadarChart 
                   scores={{
                     communication: interviewHistory[interviewHistory.length - 1].extracted.communicationScore || 0,

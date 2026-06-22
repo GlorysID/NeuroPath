@@ -363,36 +363,67 @@ function InterviewRoom() {
   }, [transcript]);
 
   // Initial sequence
-  useEffect(() => {
-    const startInterview = async () => {
-      setState("analyzing");
-      try {
-        const res = await fetch("/api/interview", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            messages: [], 
-            lang, 
-            interviewType,
-            userId: getUserId()
-          })
-        });
+  const startInterview = async (isReset = false) => {
+    setState("analyzing");
+    if (isReset) {
+      setTranscript([]);
+      setProgressPercent(0);
+      setInputValue("");
+      setInterimText("");
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+         // Fix iOS/Chrome TTS bug: Unlock audio context synchronously and avoid permanent cancellation state
+         window.speechSynthesis.cancel();
+         window.speechSynthesis.resume();
+         const unlockUtterance = new SpeechSynthesisUtterance('');
+         unlockUtterance.volume = 0;
+         window.speechSynthesis.speak(unlockUtterance);
+      }
+      if (recognitionRef.current && isRecording) {
+         try { recognitionRef.current.stop(); } catch(e){}
+         setIsRecording(false);
+      }
+    }
+    
+    try {
+      const res = await fetch("/api/interview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          messages: [], 
+          lang, 
+          interviewType,
+          userId: getUserId(),
+          isReset
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
         
-        if (res.ok) {
-          const data = await res.json();
+        if (data.threshold && data.currentScore !== undefined) {
+           const pct = Math.min(100, Math.round((data.currentScore / data.threshold) * 100));
+           setProgressPercent(pct);
+        }
+        
+        if (data.restoredTranscript && data.restoredTranscript.length > 0) {
+          setTranscript(data.restoredTranscript);
+          setState("listening"); // Resume listening immediately, no new TTS
+        } else {
           setTranscript([{ sender: "ai", text: data.reply }]);
           speakText(data.reply); // This triggers speaking state, then listening on end
-        } else {
-          const errorData = await res.json();
-          setTranscript([{ sender: "ai", text: errorData.error || t.sysError }]);
-          setState("complete");
         }
-      } catch (err) {
-        setTranscript([{ sender: "ai", text: t.netError }]);
+      } else {
+        const errorData = await res.json();
+        setTranscript([{ sender: "ai", text: errorData.error || t.sysError }]);
         setState("complete");
       }
-    };
+    } catch (err) {
+      setTranscript([{ sender: "ai", text: t.netError }]);
+      setState("complete");
+    }
+  };
 
+  useEffect(() => {
     setTimeout(() => {
       startInterview();
     }, 2000);
@@ -561,7 +592,32 @@ function InterviewRoom() {
 
       {/* Chat / Transcript Interface (Left Side HUD) */}
       <div className={styles.chatInterface}>
-        <div style={{ position: 'absolute', top: '40px', left: '40px', zIndex: 100, display: 'flex', gap: '15px', pointerEvents: 'auto' }}>
+        <div className={styles.topControls}>
+          {/* Exit Button */}
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+              if (recognitionRef.current && isRecording) try { recognitionRef.current.stop(); } catch(e){}
+              router.push('/dashboard');
+            }}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+              background: 'rgba(0,0,0,0.5)', color: 'var(--text-muted)',
+              border: '1px solid var(--border-color)', borderRadius: '20px',
+              padding: '6px 14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
+              transition: 'all 0.3s', backdropFilter: 'blur(10px)'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#ff4444'; e.currentTarget.style.borderColor = 'rgba(255, 50, 50, 0.3)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            {lang === 'id' ? "Keluar" : "Exit"}
+          </button>
+          
           <LanguageToggle />
           <div style={{
             display: 'flex', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', 
@@ -594,6 +650,26 @@ function InterviewRoom() {
               {lang === 'id' ? "Teks" : "Text"}
             </button>
           </div>
+          
+          {/* Reset Button */}
+          <button
+            onClick={() => startInterview(true)}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(255, 50, 50, 0.1)', color: '#ff4444',
+              border: '1px solid rgba(255, 50, 50, 0.3)', borderRadius: '50%',
+              width: '36px', height: '36px', cursor: 'pointer',
+              transition: 'all 0.3s', flexShrink: 0
+            }}
+            title={lang === 'id' ? "Mulai Ulang Sesi Ini" : "Reset This Session"}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 50, 50, 0.2)'; e.currentTarget.style.transform = 'rotate(180deg)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 50, 50, 0.1)'; e.currentTarget.style.transform = 'rotate(0deg)'; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <polyline points="3 3 3 8 8 8"></polyline>
+            </svg>
+          </button>
         </div>
         
         <div className={styles.transcriptContainer} ref={transcriptRef}>

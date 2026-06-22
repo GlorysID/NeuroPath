@@ -259,7 +259,7 @@ export default function Dashboard() {
             <p className={styles.subtitle}>{t.subtitle}</p>
           </motion.div>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div className={styles.headerToggles}>
             <ThemeToggle />
             <LanguageToggle />
           </div>
@@ -276,8 +276,8 @@ export default function Dashboard() {
                 <h2>{t.archetypeLabel}</h2>
                 <h1>{profile?.archetype || 'Uncalibrated'}</h1>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '300px', lineHeight: '1.6' }}>
+              <div className={styles.heroSubtitleWrap}>
+                <p className={styles.heroSubtitleText}>
                   {profile?.readinessLevel || 'Unknown'} · {lang === 'id' ? 'Peta kognitif Anda telah dianalisis.' : 'Your cognitive map has been analyzed.'}
                 </p>
               </div>

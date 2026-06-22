@@ -12,3 +12,10 @@
   height: auto;
   overflow: visible;
 }
+
+@media (max-width: 768px) {
+  .svg {
+    margin-top: 40px;
+    transform: scale(1.15);
+  }
+}

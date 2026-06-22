@@ -7,6 +7,21 @@
   padding: 20px 0;
 }
 
+.mainWrapper {
+  width: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.headerFlex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 64px;
+  z-index: 2;
+}
+
 .svgWrapper {
   position: absolute;
   top: 0;
@@ -104,6 +119,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   font-size: 0.8rem;
   font-family: var(--font-display);
   font-weight: 600;
@@ -179,5 +195,16 @@
     padding-left: 24px;
     margin-left: 8px;
     margin-top: 20px;
+  }
+
+  .mainWrapper {
+    padding: 20px 0;
+  }
+
+  .headerFlex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 32px;
   }
 }

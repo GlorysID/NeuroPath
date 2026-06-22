@@ -7,7 +7,7 @@ const SCORE_THRESHOLD = 20;
 
 export async function POST(req) {
   try {
-    const { messages, lang, interviewType, userId = "guest_temp" } = await req.json();
+    const { messages, lang, interviewType, userId = "guest_temp", isReset = false } = await req.json();
 
     // 1. Fetch State from Firestore
     const stateRef = doc(db, 'users', userId);
@@ -17,8 +17,30 @@ export async function POST(req) {
       currentState: "PROFILING",
       currentScore: 0,
       askedQuestions: [],
+      currentTranscript: [],
       lastSessionSummary: ""
     };
+
+    // Manual Reset handling
+    if (isReset) {
+      interviewState.currentScore = 0;
+      interviewState.currentTranscript = [];
+      // we intentionally keep `askedQuestions` so the AI doesn't repeat the exact same questions from the bad run
+    }
+
+    // RESTORE SESSION: If it's the initial load but we have a saved transcript (and not resetting)
+    if (!isReset && messages.length === 0 && interviewState.currentTranscript && interviewState.currentTranscript.length > 0) {
+      return new Response(JSON.stringify({ 
+        restoredTranscript: interviewState.currentTranscript,
+        newState: interviewState.currentState,
+        currentScore: interviewState.currentScore,
+        threshold: SCORE_THRESHOLD,
+        askedQuestionsCount: interviewState.askedQuestions.length
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      });
+    }
 
     let langInstruction = "You MUST speak and respond ONLY in English.";
     let initialPromptText = "Tell me one topic or field you master the most. If you are not sure, just tell me one hobby or leisure activity you do most often lately.";
@@ -26,6 +48,19 @@ export async function POST(req) {
     if (lang === 'id') {
       langInstruction = "You MUST speak and respond ONLY in Indonesian (Bahasa Indonesia).";
       initialPromptText = "Sebutkan satu topik atau bidang yang paling Anda kuasai. Jika Anda belum yakin, ceritakan saja satu hobi atau aktivitas luang yang paling sering Anda lakukan akhir-akhir ini.";
+    }
+
+    // BYPASS LLM ON INITIAL LOAD (ONLY FOR PROFILING): Guarantee language compliance and save tokens
+    if (messages.length === 0 && interviewState.currentState === "PROFILING") {
+       interviewState.currentTranscript = [{ sender: "ai", text: initialPromptText }];
+       await setDoc(stateRef, { interviewState }, { merge: true });
+       return new Response(JSON.stringify({ 
+         reply: initialPromptText,
+         newState: interviewState.currentState,
+         currentScore: interviewState.currentScore,
+         threshold: SCORE_THRESHOLD,
+         askedQuestionsCount: interviewState.askedQuestions.length
+       }), { status: 200, headers: { "Content-Type": "application/json" } });
     }
 
     // STATE LOCKING: Validate that the requested interview type matches current state
@@ -43,6 +78,7 @@ export async function POST(req) {
     const typeContext = interviewType 
       ? `This specific interview session is focused on: "${interviewType}". Tailor your questions around this topic, but keep them accessible.` 
       : `This is a progressive cognitive and career profiling interview applicable to ANY profession (business, arts, healthcare, trades, etc.). Do not assume the user is in technology.`;
+
 
     const userArchetype = userData.profile?.archetype;
     const archetypeContext = userArchetype 
@@ -87,6 +123,7 @@ RULES:
 3. EVALUATION: You MUST end your response exactly with the format: [SCORE: X] (e.g., [SCORE: 2]). This tag is hidden from the user. Use 2 for normal answers, or 0 if they completely dodge the question.
 4. CRITICAL SECRECY: DO NOT ever mention the word "score", "nilai", or tell the user you are evaluating them in your dialogue. Keep your dialogue strictly conversational.
 5. NATURAL TRANSITIONS: You MUST NEVER mention system backend variables like "PROFILING", "TECHNICAL_DEEP_DIVE", "CASE_STUDY", or "STRATEGIC_BRANDING" in your dialogue. Do not announce phases to the user. Speak completely naturally like a human interviewer gracefully moving to a new topic.
+6. ALWAYS ASK A QUESTION: You are the interviewer. Your response MUST ALWAYS end with a question asking the user for their thoughts, decisions, or elaborations. NEVER end your turn with just a statement.
 `;
 
     const apiMessages = [
@@ -122,9 +159,12 @@ RULES:
     
     // 4. Parse Score and Update State
     let score = 0;
-    const scoreMatch = replyText.match(/\[SCORE:\s*(\d+)\]/i) || replyText.match(/Skor.*?(\d+)/i);
-    if (scoreMatch) {
-      score = parseInt(scoreMatch[1], 10);
+    // PREVENT PHANTOM POINTS: Only parse score if the user actually sent a message
+    if (messages.length > 0) {
+      const scoreMatch = replyText.match(/\[SCORE:\s*(\d+)\]/i) || replyText.match(/Skor.*?(\d+)/i);
+      if (scoreMatch) {
+        score = parseInt(scoreMatch[1], 10);
+      }
     }
     
     // Aggressive cleanup: remove [SCORE: X] tags and any sentences containing the word "skor", "nilai", "evaluasi", or "batas maksimal"
@@ -161,6 +201,13 @@ RULES:
       }
       // Always end the current interview session when a phase is completed!
       replyText += " [END_INTERVIEW]";
+      interviewState.currentTranscript = []; // Clear transcript for the next phase
+    } else {
+      // Save current progress to transcript
+      interviewState.currentTranscript = [
+        ...messages,
+        { sender: "ai", text: replyText }
+      ];
     }
 
     // Save back to Firestore (Only save if not guest_temp, though guest_temp will just create a dummy doc)
