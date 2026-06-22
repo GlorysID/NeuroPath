@@ -595,75 +595,46 @@ function InterviewRoom() {
         <div className={styles.topControls}>
           {/* Exit Button */}
           <button
+            className={styles.iconBtn}
             onClick={() => {
               if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
               if (recognitionRef.current && isRecording) try { recognitionRef.current.stop(); } catch(e){}
               router.push('/dashboard');
             }}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-              background: 'rgba(0,0,0,0.5)', color: 'var(--text-muted)',
-              border: '1px solid var(--border-color)', borderRadius: '20px',
-              padding: '6px 14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
-              transition: 'all 0.3s', backdropFilter: 'blur(10px)'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#ff4444'; e.currentTarget.style.borderColor = 'rgba(255, 50, 50, 0.3)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>
             </svg>
-            {lang === 'id' ? "Keluar" : "Exit"}
+            <span className={styles.hideTextMobile}>{lang === 'id' ? "Keluar" : "Exit"}</span>
           </button>
           
           <LanguageToggle />
-          <div style={{
-            display: 'flex', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--border-color)', 
-            borderRadius: '20px', overflow: 'hidden', backdropFilter: 'blur(10px)'
-          }}>
+          
+          <div className={styles.iconBtnGroup}>
             <button
+              className={`${styles.iconBtn} ${interactionMode === "voice" ? styles.active : ""}`}
               onClick={() => setInteractionMode("voice")}
-              style={{
-                display: 'flex', alignItems: 'center',
-                background: interactionMode === "voice" ? 'var(--text-main)' : 'transparent',
-                color: interactionMode === "voice" ? 'var(--bg-color)' : 'var(--text-muted)',
-                border: 'none', padding: '6px 14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
-                transition: 'all 0.3s'
-              }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-              {lang === 'id' ? "Suara" : "Voice"}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <span className={styles.hideTextMobile}>{lang === 'id' ? "Suara" : "Voice"}</span>
             </button>
             <button
+              className={`${styles.iconBtn} ${interactionMode === "text" ? styles.active : ""}`}
               onClick={() => setInteractionMode("text")}
-              style={{
-                display: 'flex', alignItems: 'center',
-                background: interactionMode === "text" ? 'var(--text-main)' : 'transparent',
-                color: interactionMode === "text" ? 'var(--bg-color)' : 'var(--text-muted)',
-                border: 'none', padding: '6px 14px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer',
-                transition: 'all 0.3s'
-              }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6.01" y2="8"></line><line x1="10" y1="8" x2="10.01" y2="8"></line><line x1="14" y1="8" x2="14.01" y2="8"></line><line x1="18" y1="8" x2="18.01" y2="8"></line><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="10" y1="12" x2="10.01" y2="12"></line><line x1="14" y1="12" x2="14.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
-              {lang === 'id' ? "Teks" : "Text"}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><line x1="6" y1="8" x2="6.01" y2="8"></line><line x1="10" y1="8" x2="10.01" y2="8"></line><line x1="14" y1="8" x2="14.01" y2="8"></line><line x1="18" y1="8" x2="18.01" y2="8"></line><line x1="6" y1="12" x2="6.01" y2="12"></line><line x1="10" y1="12" x2="10.01" y2="12"></line><line x1="14" y1="12" x2="14.01" y2="12"></line><line x1="18" y1="12" x2="18.01" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+              <span className={styles.hideTextMobile}>{lang === 'id' ? "Teks" : "Text"}</span>
             </button>
           </div>
           
           {/* Reset Button */}
           <button
+            className={styles.iconBtn}
             onClick={() => startInterview(true)}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(255, 50, 50, 0.1)', color: '#ff4444',
-              border: '1px solid rgba(255, 50, 50, 0.3)', borderRadius: '50%',
-              width: '36px', height: '36px', cursor: 'pointer',
-              transition: 'all 0.3s', flexShrink: 0
-            }}
+            style={{ borderColor: 'rgba(255, 50, 50, 0.3)', color: '#ff4444' }}
             title={lang === 'id' ? "Mulai Ulang Sesi Ini" : "Reset This Session"}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255, 50, 50, 0.2)'; e.currentTarget.style.transform = 'rotate(180deg)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255, 50, 50, 0.1)'; e.currentTarget.style.transform = 'rotate(0deg)'; }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
@@ -673,6 +644,9 @@ function InterviewRoom() {
         </div>
         
         <div className={styles.transcriptContainer} ref={transcriptRef}>
+          {/* Spacer to push content to the bottom and allow natural scrolling */}
+          <div style={{ flex: 1, minHeight: '20px' }} />
+          
           {/* History Messages (Faded, small) */}
           {transcript.slice(0, -1).map((msg, idx) => (
             <div key={idx} className={`${styles.message} ${msg.sender === "ai" ? `${styles.ai} ${styles.history}` : styles.user}`}>
@@ -694,7 +668,7 @@ function InterviewRoom() {
               <span>{lang === 'id' ? "Progres Fase" : "Phase Progress"}</span>
            </div>
            <div className={styles.progressTrack}>
-             <div className={styles.progressFill} style={{ height: `${progressPercent}%` }} />
+             <div className={styles.progressFill} style={{ height: `${progressPercent}%`, '--progress-width': `${progressPercent}%` }} />
            </div>
         </div>
 

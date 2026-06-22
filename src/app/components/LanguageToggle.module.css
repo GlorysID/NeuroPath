@@ -1,25 +1,32 @@
 .toggleBtn {
   display: flex;
   align-items: center;
-  background: var(--surface-color);
-  border: 1px solid var(--surface-color-dark);
-  border-radius: var(--radius-pill);
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
   padding: 4px;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+  height: 36px;
+  box-sizing: border-box;
 }
 
 .toggleBtn:hover {
-  background: var(--surface-color-dark);
+  border-color: rgba(0, 229, 255, 0.3);
 }
 
 .option {
-  padding: 4px 12px;
-  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 12px;
+  font-size: 0.8rem;
   font-weight: 600;
-  border-radius: var(--radius-pill);
+  border-radius: 16px;
   color: var(--text-muted);
-  transition: var(--transition-smooth);
+  transition: all 0.3s;
 }
 
 .active {
