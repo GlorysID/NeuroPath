@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import RadarChart from "../components/RadarChart";
 import ProgressionStepper from "../components/ProgressionStepper";
 import SkillBadge from "../components/SkillBadge";
+import SearchPanel from "../components/SearchPanel";
 import styles from "./page.module.css";
 
 export default function Dashboard() {
@@ -28,7 +29,7 @@ export default function Dashboard() {
   const [modalLoading, setModalLoading] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
-  // Cover Letter states
+
   const [generatingCoverLetter, setGeneratingCoverLetter] = useState(null);
   const [coverLetters, setCoverLetters] = useState({});
 
@@ -66,7 +67,7 @@ export default function Dashboard() {
       if (currentUser) {
         setUser(currentUser);
 
-        // Listen to the document in real-time to bypass any stale caches
+
         const docRef = doc(db, "users", currentUser.uid);
         unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -107,9 +108,9 @@ export default function Dashboard() {
     };
   }, [router]);
 
-  // Live AI feed
+
   useEffect(() => {
-    // Only fetch if profile exists, feed is empty, and we have a user
+
     if (profile && !feed && user) {
       fetch("/api/agent", {
         method: "POST",
@@ -118,7 +119,7 @@ export default function Dashboard() {
       }).then(res => res.json()).then(async data => {
         if (data.result) {
           setFeed(data.result);
-          // Cache the feed permanently in Firestore to save Groq tokens
+
           try {
             await setDoc(doc(db, "users", user.uid), { aiFeed: data.result }, { merge: true });
           } catch (e) {
@@ -129,7 +130,7 @@ export default function Dashboard() {
     }
   }, [profile, lang, feed, user]);
 
-  // Portfolio action (Moved up so useEffect can reference it)
+
   const handlePortfolio = async () => {
     setModalType("portfolio");
     setModalLoading(true);
@@ -148,7 +149,7 @@ export default function Dashboard() {
     setModalLoading(false);
   };
 
-  // Jobs action (Moved up so useEffect can reference it)
+
   const handleJobs = async () => {
     setModalType("jobs");
     setModalLoading(true);
@@ -174,18 +175,18 @@ export default function Dashboard() {
     setModalLoading(false);
   };
 
-  // Listen for Agentic UI events from ChatWidget
+
   useEffect(() => {
     if (!profile) return; // Wait until profile is loaded
     
-    // 1. Listen for custom events if already on page
+
     const triggerJobs = () => handleJobs();
     const triggerPortfolio = () => handlePortfolio();
     
     window.addEventListener("openJobModal", triggerJobs);
     window.addEventListener("openPortfolioModal", triggerPortfolio);
 
-    // 2. Check URL parameters if teleported from another page
+
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
       const actionParam = searchParams.get("action");
@@ -312,15 +313,14 @@ export default function Dashboard() {
               </div>
               <div className={styles.heroSubtitleWrap}>
                 <p className={styles.heroSubtitleText}>
-                  {profile?.readinessLevel || 'Unknown'} · {lang === 'id' ? 'Peta kognitif Anda telah dianalisis.' : 'Your cognitive map has been analyzed.'}
+                  {profile?.readinessLevel || 'Unknown'} Â· {lang === 'id' ? 'Peta kognitif Anda telah dianalisis.' : 'Your cognitive map has been analyzed.'}
                 </p>
               </div>
             </motion.div>
 
             {/* Row 2: RadarChart (Span 2) + Live Feed (Span 1) */}
             <motion.div
-              className={`${styles.bentoCard} ${styles.span2}`}
-              style={{ height: '420px' }}
+              className={`${styles.bentoCard} ${styles.span2} ${styles.card420}`}
               initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.2 }}
             >
               <div className={styles.cardHeader}>{t.radarTitle}</div>
@@ -328,28 +328,34 @@ export default function Dashboard() {
             </motion.div>
 
             <motion.div
-              className={styles.bentoCard}
-              style={{ background: 'var(--surface-color-dark)', display: 'flex', flexDirection: 'column', height: '420px' }}
+              className={`${styles.bentoCard} ${styles.agentCard} ${styles.card420}`}
               initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.6 }}
             >
-              <div className={styles.cardHeader} style={{ color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text-main)', animation: 'pulse 2s infinite' }} />
-                {t.liveAi || t.liveAgent}
+              <div className={styles.agentHeader}>
+                <div className={styles.agentTitleWrap}>
+                  <span className={styles.agentDot} />
+                  <span className={styles.agentTitle}>{t.liveAi || t.liveAgent}</span>
+                </div>
+                <span className={styles.agentStatus}>
+                  {feed
+                    ? (lang === 'id' ? 'Sinkron' : 'In Sync')
+                    : (lang === 'id' ? 'Merambat' : 'Streaming')}
+                </span>
               </div>
-              <div className={styles.feedContainer} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px', flex: 1, maxHeight: 'none', height: '100%', overflowY: 'hidden' }}>
+              <div className={styles.agentRule} />
+              <div className={styles.agentFeed}>
                 {feed ? (
-                  <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)', flex: 1, overflowY: 'auto' }}>
-                    {feed.split('\n\n').map((para, i) => (
-                      <p key={i} style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.6', whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
-                        {para}
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <div style={{ padding: '16px', background: 'var(--bg-color)', borderRadius: '12px', border: '1px solid var(--surface-color-dark)', flex: 1 }}>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                      {t.analyzing}
+                  feed.split('\n\n').map((para, i) => (
+                    <p key={i} className={styles.agentPara} style={{ animationDelay: `${i * 150}ms` }}>
+                      {para}
                     </p>
+                  ))
+                ) : (
+                  <div className={styles.agentWaiting}>
+                    <span className={styles.typingDot} />
+                    <span className={styles.typingDot} style={{ animationDelay: '0.15s' }} />
+                    <span className={styles.typingDot} style={{ animationDelay: '0.3s' }} />
+                    <p className={styles.agentWaitingText}>{t.analyzing}</p>
                   </div>
                 )}
               </div>
@@ -406,6 +412,14 @@ export default function Dashboard() {
                 hasRoadmap={hasRoadmap}
               />
             </motion.div>
+
+            {/* Row 4: Unified Search (full width) */}
+            <motion.div
+              className={`${styles.bentoCard} ${styles.span3} ${styles.card420}`}
+              initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.55 }}
+            >
+              <SearchPanel userId={user?.uid} />
+            </motion.div>
           </div>
         ) : (
           <motion.section
@@ -435,7 +449,7 @@ export default function Dashboard() {
             >
               <div className={styles.modalHeader}>
                 <h3>{modalType === 'portfolio' ? t.portfolioTitle : t.jobsTitle}</h3>
-                <button onClick={closeModal} className={styles.modalClose}>✕</button>
+                <button onClick={closeModal} className={styles.modalClose}>âœ•</button>
               </div>
 
               {modalLoading ? (
@@ -444,12 +458,12 @@ export default function Dashboard() {
                   <p>{t.generating}</p>
                 </div>
               ) : modalType === 'portfolio' ? (
-                /* PORTFOLIO MODAL */
+
                 <div className={styles.modalBody}>
                   <pre className={styles.portfolioText}>{modalContent?.text}</pre>
                 </div>
               ) : (
-                /* JOBS MODAL */
+
                 <div className={styles.modalBody}>
                   {/* AI Analysis */}
                   <p className={styles.jobAnalysis}>{modalContent?.analysis}</p>
@@ -482,13 +496,13 @@ export default function Dashboard() {
                             {coverLetters[recIndex] && (
                               <div className={styles.coverLetterPanel}>
                                 <div className={styles.clHeader}>
-                                  <span className={styles.clBadge}>AI Tailored</span>
+                                  <span className={styles.clBadge}>{lang === 'id' ? 'Disusun AI' : 'AI Tailored'}</span>
                                   <button
                                     onClick={() => navigator.clipboard.writeText(coverLetters[recIndex])}
                                     className={styles.copyBtn}
-                                    title="Copy to clipboard"
+                                    title={lang === 'id' ? 'Salin ke clipboard' : 'Copy to clipboard'}
                                   >
-                                    Salin Teks
+                                    {lang === 'id' ? 'Salin Teks' : 'Copy Text'}
                                   </button>
                                 </div>
                                 <pre className={styles.clText}>{coverLetters[recIndex]}</pre>
@@ -509,7 +523,7 @@ export default function Dashboard() {
                           <div className={styles.jobListing}>
                             <div>
                               <span className={styles.jobListingTitle}>{job.title}</span>
-                              <span className={styles.jobListingMeta}>{job.company} · {job.location}</span>
+                              <span className={styles.jobListingMeta}>{job.company} Â· {job.location}</span>
                             </div>
                             <div className={styles.jobActions}>
                               <button
@@ -520,7 +534,7 @@ export default function Dashboard() {
                                 {generatingCoverLetter === i ? (lang === 'id' ? "Menyusun..." : "Writing...") : "Buat Cover Letter"}
                               </button>
                               <a href={job.url} target="_blank" rel="noopener noreferrer" className={styles.applyBtn}>
-                                {t.apply} →
+                                {t.apply} â†’
                               </a>
                             </div>
                           </div>
@@ -543,7 +557,7 @@ export default function Dashboard() {
                       ))}
                     </div>
                   ) : (
-                    <div className={styles.jobSection} style={{ padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                    <div className={styles.jobSection} style={{ padding: '15px', background: 'var(--subtle-fill)', borderRadius: '10px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
                       <h4 className={styles.jobSectionTitle} style={{ marginBottom: '8px', color: 'var(--text-main)' }}>{lang === 'id' ? 'Peluang Karir Tersirat' : 'Implied Opportunities'}</h4>
                       <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
                         {lang === 'id'

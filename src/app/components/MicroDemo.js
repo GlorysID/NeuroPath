@@ -4,9 +4,27 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "../page.module.css";
 import TiltCard from "./TiltCard";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function MicroDemo() {
   const [demoState, setDemoState] = useState("idle"); // idle, recording, analyzing, complete
+  const { lang } = useLanguage();
+
+  const t = {
+    demo: lang === 'id' ? 'DEMO INTERAKTIF' : 'INTERACTIVE DEMO',
+    listening: lang === 'id' ? 'MENDENGARKAN...' : 'LISTENING...',
+    analyzing: lang === 'id' ? 'MENGANALISIS...' : 'ANALYZING...',
+    result: lang === 'id' ? 'HASIL' : 'RESULT',
+    clickSimulate: lang === 'id' ? 'Klik untuk mensimulasikan input suara' : 'Click to simulate voice input',
+    sampleAnswer: lang === 'id'
+      ? 'Saya lebih menikmati memecahkan teka-teki logika yang rumit daripada berinteraksi dengan banyak orang...'
+      : 'I enjoy solving complex logic puzzles more than interacting with large crowds...',
+    deepWork: lang === 'id' ? '[Kapasitas Fokus Dalam: 95%]' : '[Deep Work Capacity: 95%]',
+    introverted: lang === 'id' ? '[Logika Introvert]' : '[Introverted Logic]',
+    recommendedPath: lang === 'id' ? 'Jalur yang Direkomendasikan' : 'Recommended Path',
+    systemArchitect: lang === 'id' ? 'Arsitek Sistem' : 'System Architect',
+    matchLabel: lang === 'id' ? '98% Kecocokan berdasarkan profil kognitif' : '98% Match based on cognitive profile',
+  };
 
   const handleHoldStart = () => {
     if (demoState !== "idle") return;
@@ -32,9 +50,9 @@ export default function MicroDemo() {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
           <span className={styles.mockupLabel}>
-            {demoState === "idle" ? "INTERACTIVE DEMO" : 
-             demoState === "recording" ? "LISTENING..." : 
-             demoState === "analyzing" ? "ANALYZING..." : "RESULT"}
+            {demoState === "idle" ? t.demo : 
+             demoState === "recording" ? t.listening : 
+             demoState === "analyzing" ? t.analyzing : t.result}
           </span>
           {demoState === "recording" && <span className={styles.analysisBlinker} />}
         </div>
@@ -64,7 +82,7 @@ export default function MicroDemo() {
                     <line x1="12" y1="19" x2="12" y2="22"></line>
                   </svg>
                 </motion.div>
-                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Click to simulate voice input</p>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>{t.clickSimulate}</p>
               </motion.div>
             )}
 
@@ -76,7 +94,7 @@ export default function MicroDemo() {
                 exit={{ opacity: 0 }}
                 style={{ width: "100%" }}
               >
-                <TypewriterText text="I enjoy solving complex logic puzzles more than interacting with large crowds..." />
+                <TypewriterText text={t.sampleAnswer} />
                 <div className={styles.audioWaveContainer} style={{ justifyContent: "center", marginTop: "24px" }}>
                    <motion.div className={styles.waveBar} animate={{ height: ["10px", "40px", "10px"] }} transition={{ repeat: Infinity, duration: 0.5 }} />
                    <motion.div className={styles.waveBar} animate={{ height: ["20px", "50px", "20px"] }} transition={{ repeat: Infinity, duration: 0.6 }} />
@@ -96,7 +114,7 @@ export default function MicroDemo() {
                 style={{ width: "100%" }}
               >
                 <p className={styles.mockupText} style={{ opacity: 0.5, fontSize: "1.2rem" }}>
-                  "I enjoy solving complex logic puzzles more than interacting with large crowds..."
+                  "{t.sampleAnswer}"
                 </p>
                 <motion.div 
                   style={{ 
@@ -107,8 +125,8 @@ export default function MicroDemo() {
                   transition={{ duration: 1.5, ease: "linear", repeat: Infinity }}
                 />
                 <div style={{ display: "flex", gap: "8px", marginTop: "24px", flexWrap: "wrap" }}>
-                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 }} className={styles.traitTag} style={{ borderColor: "#00e5ff", color: "#00e5ff" }}>[Deep Work Capacity: 95%]</motion.span>
-                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.2 }} className={styles.traitTag} style={{ borderColor: "#00e5ff", color: "#00e5ff" }}>[Introverted Logic]</motion.span>
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 }} className={styles.traitTag} style={{ borderColor: "#00e5ff", color: "#00e5ff" }}>{t.deepWork}</motion.span>
+                  <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.2 }} className={styles.traitTag} style={{ borderColor: "#00e5ff", color: "#00e5ff" }}>{t.introverted}</motion.span>
                 </div>
               </motion.div>
             )}
@@ -125,10 +143,10 @@ export default function MicroDemo() {
                   display: "inline-block", padding: "16px 24px", borderRadius: "12px", 
                   background: "var(--text-main)", color: "var(--bg-color)" 
                 }}>
-                  <p style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.8, marginBottom: "8px" }}>Recommended Path</p>
-                  <p style={{ fontSize: "1.5rem", fontWeight: "bold", fontFamily: "var(--font-display)" }}>System Architect</p>
+                  <p style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", opacity: 0.8, marginBottom: "8px" }}>{t.recommendedPath}</p>
+                  <p style={{ fontSize: "1.5rem", fontWeight: "bold", fontFamily: "var(--font-display)" }}>{t.systemArchitect}</p>
                 </div>
-                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "16px" }}>98% Match based on cognitive profile</p>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "16px" }}>{t.matchLabel}</p>
               </motion.div>
             )}
           </AnimatePresence>

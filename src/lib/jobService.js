@@ -11,10 +11,10 @@ export async function searchJobs(keywords, location = "Indonesia") {
   if (!apiKey) return null;
 
   try {
-    const query = encodeURIComponent(keywords.join(" "));
+    const query = encodeURIComponent(keywords[0] || keywords.join(" ") || "Software Engineer");
     const loc = encodeURIComponent(location);
     const res = await fetch(
-      `https://jsearch.p.rapidapi.com/search?query=${query}%20in%20${loc}&page=1&num_pages=1&date_posted=week`,
+      `https://jsearch.p.rapidapi.com/search?query=${query}&page=1&num_pages=1&date_posted=week&location=${loc}`,
       {
         headers: {
           "x-rapidapi-key": apiKey,

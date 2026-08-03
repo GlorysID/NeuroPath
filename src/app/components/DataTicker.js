@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function DataTicker() {
   const [count, setCount] = useState(1204593);
+  const { lang } = useLanguage();
 
   useEffect(() => {
     // Increase count randomly every 30-100ms
@@ -44,7 +46,7 @@ export default function DataTicker() {
       }} />
       <div style={{ display: "flex", flexDirection: "column" }}>
         <span style={{ fontSize: "0.65rem", letterSpacing: "0.1em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-          Career Trajectories Simulated
+          {lang === 'id' ? 'Lintasan Karier yang Disimulasikan' : 'Career Trajectories Simulated'}
         </span>
         <span style={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--text-main)", letterSpacing: "2px" }}>
           {count.toLocaleString()}

@@ -71,7 +71,8 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
           scores: interviewState,
           userAddress: userWallet.address,
           userEmail: userData.email || "Anonymous",
-          userArchetype: userData.profile?.archetype || "Unknown Archetype"
+          userArchetype: userData.profile?.archetype || "Unknown Archetype",
+          userName: userData.name || (userData.email ? userData.email.split('@')[0] : "Unknown")
         })
       });
       const data = await res.json();
@@ -138,6 +139,18 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
           </div>
         )}
 
+        {displayHash && (
+          <a
+            href={`/verify?tx=${encodeURIComponent(displayHash)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.verifyLink}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {lang === 'id' ? 'Verifikasi →' : 'Verify →'}
+          </a>
+        )}
+
         {isUnlocked && !displayHash && (
           <button
             className={styles.mintBtn}
@@ -183,7 +196,7 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
                 {/* Left Column: Details */}
                 <div style={{ flex: 1 }}>
                   <h4 className={styles.certSubtitle}>{lang === 'id' ? 'Sertifikat Kognitif' : 'Cognitive Credential'}</h4>
-                  <h2 className={styles.certTitle}>NeuroPath NFT Credential</h2>
+                  <h2 className={styles.certTitle}>{lang === 'id' ? 'Sertifikat NFT NeuroPath' : 'NeuroPath NFT Credential'}</h2>
                   
                   <div className={styles.certDetails}>
                     <div className={styles.detailRow}>
@@ -217,7 +230,7 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
                         target="_blank" 
                         rel="noopener noreferrer"
                         className={styles.detailValue} 
-                        style={{ fontSize: '0.85rem', color: '#ffffff', wordBreak: 'break-all', textDecoration: 'underline' }}
+                        style={{ fontSize: '0.85rem', color: 'var(--text-main)', wordBreak: 'break-all', textDecoration: 'underline' }}
                       >
                         {displayHash}
                       </a>
@@ -236,7 +249,7 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
                         height: '400px', 
                         borderRadius: '12px', 
                         border: '1px solid #333333', 
-                        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6)',
+                        boxShadow: 'var(--cert-image-shadow)',
                         rotateX,
                         rotateY,
                         cursor: 'grab'
@@ -253,8 +266,8 @@ export default function SkillBadge({ interviewState = {}, credentials = [], user
 
             <div className={styles.certFooter}>
               <div className={styles.verifiedStamp}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" style={{ marginTop: '2px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span style={{ color: '#ffffff', position: 'relative', top: '-1px' }}>BLOCKCHAIN VERIFIED</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginTop: '2px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span style={{ color: 'var(--text-main)', position: 'relative', top: '-1px' }}>{lang === 'id' ? 'TERVERIFIKASI BLOCKCHAIN' : 'BLOCKCHAIN VERIFIED'}</span>
               </div>
             </div>
           </motion.div>

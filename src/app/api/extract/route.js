@@ -1,5 +1,6 @@
 import { db } from "../../../lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { callAI } from "../../../lib/ai";
 
 export async function POST(req) {
   try {
@@ -73,26 +74,12 @@ Transcript:
 ${transcriptText}
 `;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: prompt }],
-        max_tokens: 1000,
-        temperature: 0.1
-      })
+    const { content } = await callAI({
+      messages: [{ role: "system", content: prompt }],
+      maxTokens: 1000,
+      temperature: 0.1
     });
-
-    if (!response.ok) {
-      throw new Error(`Groq API Error: ${await response.text()}`);
-    }
-
-    const result = await response.json();
-    let text = result.choices[0].message.content.trim();
+    let text = content.trim();
     
     // Clean up potential markdown formatting if Llama still adds it
     if (text.startsWith('```json')) text = text.replace(/^```json/, '');

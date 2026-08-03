@@ -1,12 +1,16 @@
+"use client";
+
 import styles from "./SkillTreeRoadmap.module.css";
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function SkillTreeRoadmap({ className, milestones }) {
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [schedulingIndex, setSchedulingIndex] = useState(null);
+  const { lang } = useLanguage();
 
   const handleSchedule = async (node, index) => {
     setSchedulingIndex(index);
@@ -48,10 +52,10 @@ export default function SkillTreeRoadmap({ className, milestones }) {
   }, []);
 
   const nodes = milestones && milestones.length > 0 ? milestones : [
-    { title: "Foundation", desc: "Data Analysis Basics" },
-    { title: "Specialization", desc: "Machine Learning" },
-    { title: "Advanced", desc: "AI Architecture" },
-    { title: "Target Role", description: "AI Strategist" },
+    { title: lang === 'id' ? "Fondasi" : "Foundation", desc: lang === 'id' ? "Dasar-Dasar Analisis Data" : "Data Analysis Basics" },
+    { title: lang === 'id' ? "Spesialisasi" : "Specialization", desc: lang === 'id' ? "Pembelajaran Mesin" : "Machine Learning" },
+    { title: lang === 'id' ? "Lanjutan" : "Advanced", desc: lang === 'id' ? "Arsitektur AI" : "AI Architecture" },
+    { title: lang === 'id' ? "Peran Target" : "Target Role", description: lang === 'id' ? "Arsitek AI" : "AI Strategist" },
   ];
 
   // Generates flawless mathematical Bezier curves in absolute pixels
@@ -96,9 +100,9 @@ export default function SkillTreeRoadmap({ className, milestones }) {
     <div className={`${className} ${styles.mainWrapper}`}>
       <div className={styles.headerFlex}>
         <div>
-          <h3 style={{ margin: 0, fontSize: "1.2rem", fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.05em", color: "var(--text-main)" }}>NEURAL PATHWAY</h3>
+          <h3 style={{ margin: 0, fontSize: "1.2rem", fontFamily: "var(--font-display)", fontWeight: 500, letterSpacing: "0.05em", color: "var(--text-main)" }}>{lang === 'id' ? 'JALUR NEURAL' : 'NEURAL PATHWAY'}</h3>
           <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            {milestones && milestones.length > 0 ? "Target Acquired" : "Simulation Blueprint"}
+            {milestones && milestones.length > 0 ? (lang === 'id' ? "Target Ditemukan" : "Target Acquired") : (lang === 'id' ? "Cetak Biru Simulasi" : "Simulation Blueprint")}
           </span>
         </div>
       </div>
@@ -166,7 +170,7 @@ export default function SkillTreeRoadmap({ className, milestones }) {
                       onMouseOver={(e) => { if(schedulingIndex !== i) e.target.style.background = 'var(--surface-color-dark)'; }}
                       onMouseOut={(e) => { if(schedulingIndex !== i) e.target.style.background = 'var(--bg-color)'; }}
                     >
-                      {schedulingIndex === i ? "Mengarahkan..." : "Mulai Belajar"}
+                      {schedulingIndex === i ? (lang === 'id' ? "Mengarahkan..." : "Routing...") : (lang === 'id' ? "Mulai Belajar" : "Start Learning")}
                     </button>
                   </div>
                   <div className={styles.glowEffect} />

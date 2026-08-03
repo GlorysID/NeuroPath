@@ -20,7 +20,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: var(--dock-shadow);
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 1001;
 }
@@ -65,7 +65,7 @@
   border: 1px solid var(--surface-color-dark);
   transition: all 0.2s ease;
   cursor: pointer;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--dock-shadow-hover);
 }
 
 .dockItem:hover {

@@ -66,14 +66,14 @@
 /* Glassmorphism Card */
 .glassCard {
   width: 45%;
-  background: rgba(var(--surface-color-rgb, 20, 20, 20), 0.6);
+  background: var(--glass-card-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--surface-color-dark);
   border-radius: 24px;
   padding: 24px 32px;
   position: relative;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--glass-card-shadow);
   overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
   z-index: 2;
@@ -81,8 +81,8 @@
 
 .glassCard:hover {
   transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: var(--glass-card-shadow-hover);
+  border-color: var(--glass-card-border-hover);
 }
 
 .glowEffect {
@@ -91,7 +91,7 @@
   left: -100%;
   width: 50%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  background: linear-gradient(90deg, transparent, var(--card-sheen), transparent);
   transform: skewX(-20deg);
   animation: shine 6s infinite;
   pointer-events: none;

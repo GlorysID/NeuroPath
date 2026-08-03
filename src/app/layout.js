@@ -16,8 +16,8 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
-  title: "NeuroPath | AI Career Assistant",
-  description: "Discover your ideal future with NeuroPath's AI career assistant.",
+  title: "NeuroPath | Bimbingan Karier AI untuk Siswa SMA",
+  description: "NeuroPath: solusi bimbingan konseling (BK) karier digital untuk siswa SMA Indonesia. Wawancara AI, peta jalan karier, jurnal bimbingan, dan pencarian lowongan dalam satu platform pendidikan.",
 };
 
 const themeScript = `

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { callAI } from '../../../lib/ai';
 
 export async function POST(req) {
   try {
@@ -24,26 +25,12 @@ Rules:
 4. Leave placeholders like [Your Name], [Your Phone Number], [Date] for the user to fill in.
 5. Return ONLY the raw cover letter text. No markdown blocks, no conversational text before or after.`;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: systemPrompt }],
-        max_tokens: 600,
-        temperature: 0.5
-      })
+    const { content } = await callAI({
+      messages: [{ role: "system", content: systemPrompt }],
+      maxTokens: 450,
+      temperature: 0.5
     });
-
-    if (!response.ok) {
-      throw new Error(`Groq API Error: ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    let coverLetter = data.choices[0].message.content.trim();
+    let coverLetter = content.trim();
 
     // Clean up if the LLM still returns markdown backticks
     if (coverLetter.startsWith('```')) coverLetter = coverLetter.replace(/^```[a-zA-Z]*\n?/, '');

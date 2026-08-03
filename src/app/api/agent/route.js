@@ -1,5 +1,21 @@
 import { NextResponse } from 'next/server';
 import { searchJobs, buildLinkedInUrl } from '../../../lib/jobService';
+import { callAI } from '../../../lib/ai';
+
+function cleanFeed(text) {
+  return text
+    .replace(/\*\*|__|`/g, '')
+    .replace(/^\s*#+\s*/gm, '')
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{20E3}]/gu, '')
+    .split('\n')
+    .map(line => line.replace(/^\s*[-*•]\s+/, '').trim())
+    .filter(line => !(line.startsWith('[') && line.endsWith(']')))
+    .filter(line => !/^[A-Z0-9\s#—\-:]+$/.test(line) && !/^[A-Z][^a-z]*:$/.test(line))
+    .join('\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 export async function POST(req) {
   try {
@@ -26,7 +42,14 @@ Base your recommendations on the user's archetype "${profile?.archetype || 'Unkn
 Return ONLY the raw JSON.`;
 
     } else if (action === "feed") {
-      systemPrompt = `You are an AI career agent named OpenClaw. Look at this user profile: ${JSON.stringify(profile)}. Generate 2 short, proactive, and slightly urgent recommendations or observations about their career trajectory as if you are analyzing them in real-time. Make it sound like a live agent feed. Return plain text.`;
+      systemPrompt = `You are NeuroPath, a calm and professional AI career mentor. Based on this profile: ${JSON.stringify(profile)}, write 2 concise observations about the user's career trajectory and the best next step for each.
+
+STRICT FORMAT:
+- Plain editorial sentences only. No emojis, no icons, no markdown, no bold text, no ALL-CAPS words, no headers, no bullet lists, and no labels such as "SIGNAL", "ALERT", "FEED", "NOTICE", or "PRIORITY".
+- Speak naturally, in a warm advisory tone, directly to the user ("you").
+- Each observation is one short paragraph of 2-3 sentences.
+- Separate the two paragraphs with a single blank line.
+- Total around 70 words. Never shout.`;
 
     } else {
       return NextResponse.json({ error: "Unknown action" }, { status: 400 });
@@ -38,26 +61,11 @@ Return ONLY the raw JSON.`;
       systemPrompt += " Respond in English.";
     }
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: systemPrompt }],
-        max_tokens: 400,
-        temperature: action === "jobs" ? 0.2 : 0.7
-      })
+    const { content: rawResult } = await callAI({
+      messages: [{ role: "system", content: systemPrompt }],
+      maxTokens: 400,
+      temperature: action === "jobs" ? 0.2 : 0.7
     });
-
-    if (!response.ok) {
-      throw new Error(`Agent API Error: ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    const rawResult = data.choices[0].message.content;
 
     // For jobs action, parse structured response and enrich with LinkedIn + JSearch
     if (action === "jobs") {
@@ -105,7 +113,7 @@ Return ONLY the raw JSON.`;
       }
     }
 
-    return NextResponse.json({ result: rawResult });
+    return NextResponse.json({ result: action === "feed" ? cleanFeed(rawResult) : rawResult });
   } catch (error) {
     console.error("Error in Agent API:", error);
     return NextResponse.json({ error: "Failed to generate agent response" }, { status: 500 });

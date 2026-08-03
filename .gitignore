@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
 
 # vercel
 .vercel
@@ -40,5 +41,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# hardhat build artifacts (regenerated via `npx hardhat compile`)
+/artifacts/
+/cache/
+
 # scratch directory (contains test scripts with api keys)
 scratch/
+
+# unused starter scaffold
+/temp-app

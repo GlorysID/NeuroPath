@@ -700,7 +700,7 @@ function InterviewRoom() {
                 className={`${styles.micBtn} ${isRecording ? styles.recording : ''}`}
                 onClick={toggleRecording}
                 disabled={state !== "listening"}
-                title="Voice Input"
+                title={lang === 'id' ? 'Input Suara' : 'Voice Input'}
               >
                 {isRecording ? (
                   <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20"><path d="M6 19h12v2H6z" /><path d="M12 3a3 3 0 00-3 3v8a3 3 0 006 0V6a3 3 0 00-3-3z" /><path d="M19 11v3a7 7 0 01-14 0v-3h2v3a5 5 0 0010 0v-3h2z" /></svg>

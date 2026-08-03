@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { callAI } from '../../../lib/ai';
 
 export async function POST(req) {
   try {
@@ -20,26 +21,12 @@ Return ONLY a valid JSON object:
 Make the response in ${lang === 'id' ? 'Indonesian' : 'English'}.
 Return ONLY the raw JSON.`;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: systemPrompt }],
-        max_tokens: 1000,
-        temperature: 0.2
-      })
+    const { content } = await callAI({
+      messages: [{ role: "system", content: systemPrompt }],
+      maxTokens: 1000,
+      temperature: 0.2
     });
-
-    if (!response.ok) {
-      throw new Error("API Error");
-    }
-
-    const data = await response.json();
-    let text = data.choices[0].message.content.trim();
+    let text = content.trim();
     if (text.startsWith('```json')) text = text.replace(/^```json/, '');
     if (text.startsWith('```')) text = text.replace(/^```/, '');
     if (text.endsWith('```')) text = text.replace(/```$/, '');

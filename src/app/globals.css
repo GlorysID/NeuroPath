@@ -1,29 +1,30 @@
 :root {
-  /* Default Light Theme */
-  --bg-color: #ffffff;
-  --text-main: #000000;
-  --text-muted: #261e1e;
-  /* Darker grey for much better contrast in light mode */
-  --surface-color: #f5f5f5;
+  /* Default Light Theme — soft editorial, readable hierarchy */
+  --bg-color: #fafafa;
+  --text-main: #1a1a1a;
+  --text-muted: #6e6e6e;
+  /* Clearly lighter than text-main so hierarchy reads at a glance */
+  --surface-color: #ffffff;
   --surface-color-rgb: 255, 255, 255;
-  --surface-color-dark: #cccccc;
-  --glow-color: rgba(0, 0, 0, 0.35);
-  /* Dark elegant eclipse shadow for light mode */
+  --surface-color-dark: #e4e4e7;
+  /* Soft hairline, not a harsh divider */
+  --glow-color: rgba(0, 0, 0, 0.10);
+  /* Gentle shadow for light mode */
 
   --font-sans: 'Inter', var(--font-inter), sans-serif;
   --font-display: 'Playfair Display', var(--font-playfair), serif;
 
-  /* Interview HUD Variables */
-  --hud-gradient: linear-gradient(135deg, #111111 0%, #666666 100%);
-  --hud-input-bg: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0.01) 100%);
-  --hud-input-bg-focus: linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.02) 100%);
-  --hud-border: rgba(0, 0, 0, 0.2);
-  --hud-border-top: rgba(0, 0, 0, 0.3);
-  --hud-border-focus: rgba(0, 0, 0, 0.5);
-  --hud-shadow: 0 30px 60px rgba(0,0,0,0.1), inset 0 2px 20px rgba(0,0,0,0.05);
-  --hud-shadow-focus: 0 20px 60px rgba(0,0,0,0.15), inset 0 2px 25px rgba(0,0,0,0.1);
-  --hud-placeholder: rgba(0, 0, 0, 0.4);
-  --hud-mask: linear-gradient(to bottom, transparent 0%, white 15%, white 100%);
+  /* Interview HUD Variables (light) */
+  --hud-gradient: linear-gradient(135deg, #f4f4f5 0%, #e8e8ea 100%);
+  --hud-input-bg: linear-gradient(180deg, rgba(0, 0, 0, 0.02) 0%, rgba(0, 0, 0, 0) 100%);
+  --hud-input-bg-focus: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0) 100%);
+  --hud-border: rgba(0, 0, 0, 0.08);
+  --hud-border-top: rgba(0, 0, 0, 0.12);
+  --hud-border-focus: rgba(0, 0, 0, 0.18);
+  --hud-shadow: 0 30px 60px rgba(0, 0, 0, 0.06), inset 0 2px 20px rgba(0, 0, 0, 0.02);
+  --hud-shadow-focus: 0 20px 60px rgba(0, 0, 0, 0.08), inset 0 2px 25px rgba(0, 0, 0, 0.03);
+  --hud-placeholder: rgba(0, 0, 0, 0.35);
+  --hud-mask: linear-gradient(to bottom, transparent 0%, #fafafa 15%, #fafafa 100%);
 
   /* Utilities */
   --radius-sm: 4px;
@@ -33,9 +34,32 @@
 
   --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   /* Utility Variables */
-  --dock-bg: rgba(255, 255, 255, 0.8);
-  --dock-bg-hover: rgba(0, 0, 0, 0.05);
-  --dock-tooltip-bg: rgba(255, 255, 255, 0.9);
+  --dock-bg: rgba(255, 255, 255, 0.85);
+  --dock-bg-hover: rgba(0, 0, 0, 0.04);
+  --dock-tooltip-bg: rgba(255, 255, 255, 0.95);
+
+  /* Certificate modal (theme-aware) */
+  --cert-modal-bg: linear-gradient(160deg, #ffffff 0%, #f7f7f8 100%);
+  --cert-modal-border: #e4e4e7;
+  --cert-details-bg: rgba(0, 0, 0, 0.03);
+  --cert-details-border: rgba(0, 0, 0, 0.06);
+  --verified-color: #0e9a6a;
+
+  /* Glassmorphism cards (roadmap) */
+  --glass-card-bg: rgba(255, 255, 255, 0.85);
+  --glass-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --glass-card-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.12);
+  --glass-card-border-hover: rgba(0, 0, 0, 0.15);
+  --card-sheen: rgba(0, 0, 0, 0.03);
+
+  /* Chat FAB, HUD pills, dock & cert shadows */
+  --fab-bg: linear-gradient(135deg, rgba(0, 229, 255, 0.12) 0%, rgba(255, 255, 255, 0.92) 100%);
+  --hud-pill-bg: rgba(0, 0, 0, 0.05);
+  --subtle-fill: rgba(0, 0, 0, 0.04);
+  --border-color: #e4e4e7;
+  --dock-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), inset 0 -2px 0 rgba(0, 0, 0, 0.05);
+  --dock-shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.12);
+  --cert-image-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 }
 
 [data-theme='dark'] {
@@ -63,6 +87,29 @@
   --dock-bg: rgba(20, 20, 22, 0.8);
   --dock-bg-hover: rgba(255, 255, 255, 0.1);
   --dock-tooltip-bg: rgba(10, 10, 12, 0.9);
+
+  /* Certificate modal (theme-aware) */
+  --cert-modal-bg: linear-gradient(145deg, #161618 0%, #1a1a1c 100%);
+  --cert-modal-border: rgba(255, 255, 255, 0.1);
+  --cert-details-bg: rgba(0, 0, 0, 0.2);
+  --cert-details-border: rgba(255, 255, 255, 0.02);
+  --verified-color: #00ff9d;
+
+  /* Glassmorphism cards (roadmap) */
+  --glass-card-bg: rgba(20, 20, 20, 0.6);
+  --glass-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  --glass-card-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.4);
+  --glass-card-border-hover: rgba(255, 255, 255, 0.2);
+  --card-sheen: rgba(255, 255, 255, 0.05);
+
+  /* Chat FAB, HUD pills, dock & cert shadows */
+  --fab-bg: linear-gradient(135deg, rgba(0, 229, 255, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%);
+  --hud-pill-bg: rgba(0, 0, 0, 0.5);
+  --subtle-fill: rgba(255, 255, 255, 0.05);
+  --border-color: #222222;
+  --dock-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  --dock-shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.3);
+  --cert-image-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
 }
 
 @media (pointer: fine) {

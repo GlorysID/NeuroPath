@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { callAI } from '../../../lib/ai';
 
 const INTERVIEW_STATES = ["PROFILING", "TECHNICAL_DEEP_DIVE", "CASE_STUDY", "STRATEGIC_BRANDING"];
 const SCORE_THRESHOLD = 20;
@@ -113,9 +114,21 @@ ${CONTEXT_BLOCK}
 
 CRITICAL ADAPTIVE EXPERTISE MODE INSTRUCTIONS (FOR DEMO/FAST INTERVIEW):
 1. INITIAL QUESTION: If the user has NOT provided any topic yet (if FORBIDDEN QUESTIONS is "None."), you MUST open the interview EXACTLY with this friendly prompt: "${initialPromptText}"
-2. ANCHOR & DIG DEEP: Once the user provides a topic/hobby, you MUST anchor all your subsequent questions strictly to that topic. Turn their hobby/expertise into a professional cognitive question.
-3. FAST-PACED: Keep your questions SHORT and VERY EASY to understand. Do not ask multiple questions at once. Ask ONE focused question.
-4. SCORE ACCELERATION: To ensure a professional 10-question demonstration, if the user provides ANY coherent answer, you MUST reward them. Secretly end your response EXACTLY with the format: [SCORE: 2].
+2. ANCHOR & DIG DEEP: Once the user provides a topic/hobby, you MUST anchor ALL your subsequent questions strictly to that topic. Turn their hobby/expertise into a professional cognitive question.
+3. SCORE ACCELERATION: To ensure a professional 10-question demonstration, if the user provides ANY coherent answer, you MUST reward them. Secretly end your response EXACTLY with the format: [SCORE: 2].
+
+CRITICAL QUESTION QUALITY RULES (HIGHEST PRIORITY - MORE IMPORTANT THAN EVERYTHING ELSE):
+1. EXACTLY ONE QUESTION: Your entire reply must contain exactly ONE question mark ("?"). NEVER ask two questions, NEVER say "A, B, dan C?". One question, and nothing else.
+2. SHORT: The question must be AT MOST 20 words. One short sentence.
+3. SIMPLE LANGUAGE: Write like a friendly human talking to a high school student. If you need a technical term, explain it in parentheses in 3 words max, or avoid it entirely. NEVER use jargon the user did not introduce themselves. NEVER open with definitions, explanations, or mini-lectures.
+4. NO LISTS: Never use bullets, numbering, or multi-part questions.
+5. STRUCTURE: Optional short friendly phrase (max 5 words), then the single question ending with "?".
+
+PER-PHASE QUESTION STYLE:
+- PROFILING: Ask about hobbies or favorite topics. Examples: "Hobi apa yang paling kamu nikmati?" or "Topik apa yang paling kamu kuasai?"
+- TECHNICAL_DEEP_DIVE: Pick ONE simple concept from the user's own words and ask "Bagaimana cara kamu ...?" or "Apa yang terjadi kalau ...?". Use THEIR words, not new technical terms.
+- CASE_STUDY: Set a tiny everyday scenario in ONE short sentence, then ask ONE simple question like "Apa yang akan kamu lakukan?"
+- STRATEGIC_BRANDING: Ask about dreams simply: "Di mana kamu membayangkan dirimu lima tahun lagi?" or "Mimpi terbesarmu di bidang ini apa?"
 
 RULES:
 1. NEVER ask about topics listed in FORBIDDEN QUESTIONS.
@@ -134,28 +147,12 @@ RULES:
       }))
     ];
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: apiMessages,
-        max_tokens: 300,
-        temperature: 0.7
-      })
+    const { content } = await callAI({
+      messages: apiMessages,
+      maxTokens: 300,
+      temperature: 0.7
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error response:", errorText);
-      return new Response(JSON.stringify({ error: `System Error. Failed to connect to Neural Core. Detail: ${errorText.substring(0, 100)}` }), { status: response.status });
-    }
-
-    const data = await response.json();
-    let replyText = data.choices && data.choices[0] ? data.choices[0].message.content : "System Error. Response format invalid.";
+    let replyText = content || "System Error. Response format invalid.";
     
     // 4. Parse Score and Update State
     let score = 0;
@@ -173,7 +170,13 @@ RULES:
       const lower = sentence.toLowerCase();
       return !lower.includes('skor') && !lower.includes('nilai') && !lower.includes('evaluasi') && !lower.includes('batas maksimal');
     }).join(' ').trim();
-    
+
+    // SINGLE-QUESTION GUARD: cut everything after the first "?" so the reply can never contain multiple questions
+    const firstQuestionMark = replyText.indexOf('?');
+    if (firstQuestionMark > -1) {
+      replyText = replyText.slice(0, firstQuestionMark + 1).trim();
+    }
+
     if (!replyText) {
       replyText = "Menarik. Bisa Anda ceritakan lebih detail mengenai hal itu?";
     }

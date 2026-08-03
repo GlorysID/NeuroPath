@@ -62,7 +62,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s;
-  background: rgba(0,0,0,0.5);
+  background: var(--hud-pill-bg);
   color: var(--text-muted);
   border: 1px solid var(--border-color);
   backdrop-filter: blur(10px);
@@ -75,7 +75,7 @@
 .iconBtnGroup {
   display: flex;
   align-items: center;
-  background: rgba(0,0,0,0.5);
+  background: var(--hud-pill-bg);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 4px;

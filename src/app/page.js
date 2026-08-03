@@ -96,27 +96,27 @@ export default function Home() {
     title1: lang === 'id' ? 'Temukan' : 'Discover your',
     title2: lang === 'id' ? 'masa depan idealmu.' : 'ideal future.',
     subtitle: lang === 'id'
-      ? 'Berhenti menebak-nebak apa yang terjadi setelah lulus. Lakukan wawancara suara real-time dengan AI kami untuk menganalisis bakatmu dan dapatkan roadmap karir yang konkret langkah demi langkah.'
-      : 'Stop guessing about what comes after graduation. Have a real-time voice interview with our AI to analyze your aptitudes and generate a concrete, step-by-step roadmap for your career.',
+      ? 'Berhenti menebak-nebak masa depan setelah lulus SMA. NeuroPath adalah layanan bimbingan konseling (BK) karier digital: wawancara suara real-time dengan AI untuk menganalisis minat dan bakatmu, lalu dapatkan roadmap karier yang konkret langkah demi langkah.'
+      : 'Stop guessing about what comes after high school. NeuroPath is a digital career guidance (BK) service: a real-time voice interview with our AI to analyze your interests and aptitudes, then get a concrete, step-by-step career roadmap.',
     startBtn: lang === 'id' ? 'Mulai Wawancara AI' : 'Start AI Interview',
     viewRoadmap: lang === 'id' ? 'Eksplorasi Fitur Dashboard' : 'Explore Dashboard Features',
     mockLabel: lang === 'id' ? 'Wawancara Berlangsung' : 'Interview In Progress',
     mockText: lang === 'id' ? '"Mari kita bahas tentang subjek yang paling membuatmu bersemangat..."' : '"Let\'s talk about the subjects that energize you the most..."',
     problemHeading: lang === 'id'
-      ? 'Kelulusan seharusnya tidak terasa seperti berjalan dengan mata tertutup ke dalam labirin.'
-      : 'Graduation shouldn\'t feel like walking blindfolded into a maze.',
+      ? 'Kelulusan SMA seharusnya tidak terasa seperti berjalan dengan mata tertutup ke dalam labirin.'
+      : 'High school graduation shouldn\'t feel like walking blindfolded into a maze.',
     problemDesc: lang === 'id'
-      ? 'Tes karir tradisional sudah usang dan kaku. NeuroPath mengganti pilihan ganda dengan percakapan alami. Kami mendengarkan cara berpikirmu, apa yang kamu pedulikan, dan di mana kelebihanmu—lalu kami buatkan petanya.'
-      : 'Traditional career tests are rigid and outdated. NeuroPath replaces multiple-choice questions with a natural conversation. We listen to how you think, what you care about, and where you excel—then we build the map.',
+      ? 'Tes karir tradisional sudah usang dan kaku. NeuroPath mengganti pilihan ganda dengan percakapan alami. Kami mendengarkan cara berpikirmu, apa yang kamu pedulikan, dan di mana kelebihanmu, lalu kami buatkan petanya, lengkap dengan jurnal bimbingan yang membantumu mencatat setiap langkah.'
+      : 'Traditional career tests are rigid and outdated. NeuroPath replaces multiple-choice questions with a natural conversation. We listen to how you think, what you care about, and where you excel, then we build the map, complete with a counseling journal to track every step.',
     howTitle: lang === 'id' ? 'Cara Kerja NeuroPath' : 'How NeuroPath Works',
-    howSubtitle: lang === 'id' ? 'Jalur terstruktur dari kebingungan menuju kejelasan.' : 'A structured path from confusion to clarity.',
+    howSubtitle: lang === 'id' ? 'Jalur terstruktur dari kebingungan menuju kejelasan, seperti sesi bimbingan bersama guru BK, tapi tersedia 24 jam.' : 'A structured path from confusion to clarity, like a counseling session with your school advisor, available 24/7.',
     f1Title: lang === 'id' ? 'Wawancara AI Suara' : 'Voice AI Interview',
     f1Desc: lang === 'id' ? 'Lakukan percakapan alami dan real-time dengan agen cerdas kami. Ia mengajukan pertanyaan yang tepat untuk mengungkap kekuatan tersembunyimu.' : 'Have a natural, real-time conversation with our intelligent agent. It asks the right questions to uncover your hidden strengths.',
     f2Title: lang === 'id' ? 'Analisis Mendalam' : 'Deep Analysis',
     f2Desc: lang === 'id' ? 'Kami menganalisis jawabanmu, mengidentifikasi pola minat, keterampilan, dan nilai-nilaimu untuk menemukan karir yang paling cocok.' : 'We analyze your responses, identifying patterns in your interests, skills, and values to find the perfect career match.',
     f3Title: lang === 'id' ? 'Roadmap Konkret' : 'Concrete Roadmap',
     f3Desc: lang === 'id' ? 'Dapatkan rencana aksi yang dipersonalisasi. Mulai dari keterampilan yang harus dipelajari, hingga universitas atau bootcamp yang harus dilamar.' : 'Receive a personalized, step-by-step action plan. From what skills to learn, to which universities or bootcamps to apply to.',
-    testimonial: lang === 'id' ? '"Saya benar-benar tersesat setelah lulus. NeuroPath tidak hanya memberi saya tes kepribadian—ia berbicara dengan saya, memahami saya, dan memberi saya jalan yang jelas ke depan."' : '"I was completely lost after graduation. NeuroPath didn\'t just give me a personality test—it talked to me, understood me, and gave me a clear path forward."',
+    testimonial: lang === 'id' ? '"Saya benar-benar tersesat setelah lulus. NeuroPath tidak hanya memberi saya tes kepribadian, ia berbicara dengan saya, memahami saya, dan memberi saya jalan yang jelas ke depan."' : '"I was completely lost after graduation. NeuroPath didn\'t just give me a personality test, it talked to me, understood me, and gave me a clear path forward."',
     testRole: lang === 'id' ? 'Menemukan jalannya di UX Design' : 'Found her path in UX Design',
     faqTitle: lang === 'id' ? 'Pertanyaan Umum' : 'Common Questions',
     q1: lang === 'id' ? 'Apakah saya harus menggunakan suara saya?' : 'Do I have to use my voice?',
@@ -204,7 +204,7 @@ export default function Home() {
           <div className={styles.heroBackgroundRobot}>
             <Image
               src="/images/hero-side-robot.png"
-              alt="Futuristic Robot"
+              alt={lang === 'id' ? 'Robot Futuristik' : 'Futuristic Robot'}
               fill
               style={{ objectFit: 'contain', objectPosition: 'left center' }}
               priority
@@ -279,15 +279,15 @@ export default function Home() {
                   <motion.span
                     className={styles.traitTag}
                     initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 1 }}
-                  >Creative Problem Solving</motion.span>
+                  >{lang === 'id' ? 'Pemecahan Masalah Kreatif' : 'Creative Problem Solving'}</motion.span>
                   <motion.span
                     className={styles.traitTag}
                     initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 2.5 }}
-                  >High Empathy</motion.span>
+                  >{lang === 'id' ? 'Empati Tinggi' : 'High Empathy'}</motion.span>
                   <motion.span
                     className={styles.traitTag}
                     initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 4 }}
-                  >Visual Thinker</motion.span>
+                  >{lang === 'id' ? 'Berpikir Visual' : 'Visual Thinker'}</motion.span>
                 </div>
                 <div className={styles.scanningBox}>
                   <motion.div
@@ -462,13 +462,14 @@ export default function Home() {
                 <span className={styles.footerLogo}>NeuroPath</span>
                 <p className={styles.footerTagline}>{t.footerTagline}</p>
                 <p className={styles.footerTagline} style={{ marginTop: '8px', fontSize: '0.85rem' }}>
-                  &copy; {new Date().getFullYear()} Anjali Saputra
+                  &copy; {new Date().getFullYear()} NeuroTeam &middot; SMK Bina Mandiri Multimedia
                 </p>
               </div>
               <div className={styles.footerLinks}>
                 <Link href="/login" className={styles.footerLink}>{t.signIn}</Link>
                 <Link href="/interview" className={styles.footerLink}>{t.startBtn}</Link>
-                <a href="https://openclaw.ai" target="_blank" rel="noreferrer" className={styles.footerLink}>Powered by Openclaw</a>
+                <Link href="/verify" className={styles.footerLink}>{lang === 'id' ? 'Verifikasi Sertifikat' : 'Verify Certificate'}</Link>
+                <span className={styles.footerLink}>{lang === 'id' ? 'Ditenagai NeuroPath AI' : 'Powered by NeuroPath AI'}</span>
               </div>
             </div>
           </footer>

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { callAI } from '../../../lib/ai';
 
 export async function POST(req) {
   try {
@@ -13,26 +14,12 @@ Generate the BEST possible YouTube search query to find a highly relevant, high-
 Keep it under 6 words. For example: "React hooks crash course 2024" or "System design interview basics".
 Return ONLY the raw search query as plain text. No quotes, no markdown, no explanations.`;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: systemPrompt }],
-        max_tokens: 50,
-        temperature: 0.2
-      })
+    const { content } = await callAI({
+      messages: [{ role: "system", content: systemPrompt }],
+      maxTokens: 50,
+      temperature: 0.2
     });
-
-    if (!response.ok) {
-      throw new Error(`Groq API Error: ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    let optimizedQuery = data.choices[0].message.content.trim();
+    let optimizedQuery = content.trim();
 
     // Clean up if the LLM adds quotes
     optimizedQuery = optimizedQuery.replace(/^["']|["']$/g, '');

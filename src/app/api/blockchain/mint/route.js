@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 
 export async function POST(req) {
   try {
-    const { userId, badgeType, scores, userAddress, userEmail, userArchetype } = await req.json();
+    const { userId, badgeType, scores, userAddress, userEmail, userArchetype, userName } = await req.json();
 
     // Setup Provider and Signer (Ethereum Sepolia)
     const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
@@ -42,6 +42,7 @@ export async function POST(req) {
       attributes: [
         { trait_type: "Archetype", value: archetype },
         { trait_type: "Owner", value: userAddress },
+        { trait_type: "Holder", value: userName || email },
         { trait_type: "Platform", value: "NeuroPath" }
       ]
     });
@@ -60,6 +61,8 @@ export async function POST(req) {
       network: "Ethereum Sepolia",
       contractAddress,
       ownerAddress: userAddress,
+      holderName: userName || email,
+      holderEmail: email,
       explorerUrl: `https://sepolia.etherscan.io/tx/${receipt.hash}`,
       imageUri: imageUri
     };

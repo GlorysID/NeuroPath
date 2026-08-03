@@ -1,3 +1,5 @@
+import { callAI } from '../../../lib/ai';
+
 export async function POST(req) {
   try {
     const { profile, lang } = await req.json();
@@ -17,26 +19,13 @@ Generate a professional portfolio summary that includes:
 Format it cleanly with clear section headers. Use plain text only, no markdown.
 ${langInst}`;
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "system", content: systemPrompt }],
-        max_tokens: 800,
-        temperature: 0.6
-      })
+    const { content } = await callAI({
+      messages: [{ role: "system", content: systemPrompt }],
+      maxTokens: 500,
+      temperature: 0.6
     });
 
-    if (!response.ok) {
-      throw new Error(`Groq API Error: ${await response.text()}`);
-    }
-
-    const data = await response.json();
-    return Response.json({ result: data.choices[0].message.content });
+    return Response.json({ result: content });
   } catch (error) {
     console.error("Portfolio error:", error);
     return Response.json({ error: "Failed to generate portfolio" }, { status: 500 });

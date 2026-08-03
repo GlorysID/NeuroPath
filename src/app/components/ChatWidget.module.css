@@ -12,7 +12,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(0, 229, 255, 0.2) 0%, rgba(0, 0, 0, 0.8) 100%);
+  background: var(--fab-bg);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   display: flex;

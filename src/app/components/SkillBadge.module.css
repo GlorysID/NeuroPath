@@ -119,6 +119,22 @@
   border-radius: 6px;
 }
 
+.verifyLink {
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  margin-top: 6px;
+  text-decoration: none;
+}
+
+.verifyLink:hover {
+  border-bottom-color: currentColor;
+  opacity: 0.8;
+}
+
 .mintBtn {
   padding: 12px 20px;
   background: var(--text-main);
@@ -168,8 +184,8 @@
 }
 
 .certModal {
-  background: linear-gradient(145deg, #161618 0%, #1a1a1c 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--cert-modal-bg);
+  border: 1px solid var(--cert-modal-border);
   border-radius: 24px;
   width: 100%;
   max-width: 900px;
@@ -185,7 +201,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 24px 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--cert-modal-border);
 }
 
 .certLogo {
@@ -245,10 +261,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--cert-details-bg);
   padding: 20px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--cert-details-border);
 }
 
 .detailRow {
@@ -283,7 +299,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #00ff9d;
+  color: var(--verified-color);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;

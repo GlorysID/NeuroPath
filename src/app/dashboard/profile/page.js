@@ -10,6 +10,7 @@ import { useLanguage } from "../../context/LanguageContext";
 import LanguageToggle from "../../components/LanguageToggle";
 import ThemeToggle from "../../components/ThemeToggle";
 import RadarChart from "../../components/RadarChart";
+import NotesPanel from "../../components/NotesPanel";
 import styles from "./page.module.css";
 
 const DIMENSION_COLORS = [
@@ -36,6 +37,7 @@ const calculateAverageScore = (extracted) => {
 };
 
 function ProgressChart({ history }) {
+  const { lang } = useLanguage();
   const dataPoints = history
     .filter(h => h.extracted)
     .map((h, i) => ({
@@ -45,7 +47,7 @@ function ProgressChart({ history }) {
     }));
 
   if (dataPoints.length < 1) {
-    return <div className={styles.noChartData}>Belum ada data perkembangan skor.</div>;
+    return <div className={styles.noChartData}>{lang === 'id' ? 'Belum ada data perkembangan skor.' : 'No score progress data yet.'}</div>;
   }
 
   const padding = { top: 30, right: 30, bottom: 40, left: 50 };
@@ -235,7 +237,7 @@ export default function ProfilePage() {
 
   const creationDate = user?.metadata?.creationTime
     ? new Date(user.metadata.creationTime).toLocaleDateString(lang === 'id' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
-    : '—';
+    : '';
 
   return (
     <>
@@ -271,7 +273,7 @@ export default function ProfilePage() {
       </motion.div>
 
       <div className={styles.profileWrapper}>
-        {/* Header — same as dashboard */}
+        {/* Header (same as dashboard) */}
         <header className={styles.header}>
           <motion.div initial="hidden" animate="visible" variants={fadeUp}>
             <h1 className={styles.greeting}>
@@ -285,7 +287,7 @@ export default function ProfilePage() {
           </div>
         </header>
 
-        {/* Bento Grid — same system as dashboard */}
+        {/* Bento Grid (same system as dashboard) */}
         <div className={styles.bentoGrid}>
 
           {/* Row 1: Interview History (span 2) + Settings (span 1) */}
@@ -353,7 +355,7 @@ export default function ProfilePage() {
                 <div className={styles.settingLabel}>
                   <span className={styles.settingTitle}>{t.email}</span>
                 </div>
-                <span className={styles.settingChip}>{user?.email || '—'}</span>
+                <span className={styles.settingChip}>{user?.email || (lang === 'id' ? 'Belum diisi' : 'Not set')}</span>
               </div>
               <div className={styles.settingRow}>
                 <div className={styles.settingLabel}>
@@ -396,7 +398,7 @@ export default function ProfilePage() {
             <div className={styles.cardHeader}>{lang === 'id' ? 'Dimensi Kognitif' : 'Cognitive Dimensions'}</div>
             {interviewHistory.length > 0 && interviewHistory[interviewHistory.length - 1].extracted ? (
               <div className={styles.profileRadarWrap}>
-                <RadarChart 
+                <RadarChart
                   scores={{
                     communication: interviewHistory[interviewHistory.length - 1].extracted.communicationScore || 0,
                     technical: interviewHistory[interviewHistory.length - 1].extracted.technicalScore || 0,
@@ -404,12 +406,21 @@ export default function ProfilePage() {
                     creativity: interviewHistory[interviewHistory.length - 1].extracted.creativityScore || 0,
                     leadership: interviewHistory[interviewHistory.length - 1].extracted.leadershipScore || 0,
                     adaptability: interviewHistory[interviewHistory.length - 1].extracted.adaptabilityScore || 0,
-                  }} 
+                  }}
                 />
               </div>
             ) : (
-              <div className={styles.emptyHistory}>—</div>
+              <div className={styles.emptyHistory}>{lang === 'id' ? 'Belum ada riwayat wawancara.' : 'No interview history yet.'}</div>
             )}
+          </motion.div>
+
+          {/* Row 3: Counseling Journal (full width) */}
+          <motion.div
+            className={`${styles.bentoCard} ${styles.span3}`}
+            style={{ height: '480px' }}
+            initial="hidden" animate="visible" variants={fadeUp} transition={{ delay: 0.5 }}
+          >
+            <NotesPanel userId={user?.uid} />
           </motion.div>
 
         </div>

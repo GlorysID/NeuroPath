@@ -1,7 +1,5 @@
-import { Groq } from "groq-sdk";
 import { NextResponse } from "next/server";
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+import { callAI } from "../../../lib/ai";
 
 export async function POST(req) {
   try {
@@ -119,19 +117,17 @@ DO NOT mix them up. If the user asks for a portfolio, DO NOT call find_real_jobs
       }
     ];
 
-    let response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile", // Updated to the latest supported model
+    const { message } = await callAI({
       messages: [
         { role: "system", content: systemPrompt },
         ...formattedMessages
       ],
       tools: tools,
-      tool_choice: "auto",
-      temperature: 0.6,
-      max_tokens: 1500,
+      maxTokens: 900,
+      temperature: 0.6
     });
 
-    const responseMessage = response.choices[0]?.message;
+    const responseMessage = message;
 
     // Handle Tool Calling
     if (responseMessage?.tool_calls) {
@@ -149,7 +145,7 @@ DO NOT mix them up. If the user asks for a portfolio, DO NOT call find_real_jobs
       }
     }
 
-    const replyText = response.choices[0]?.message?.content || "Maaf, saya tidak dapat memproses permintaan Anda saat ini.";
+    const replyText = responseMessage?.content || "Maaf, saya tidak dapat memproses permintaan Anda saat ini.";
 
     return NextResponse.json({ reply: replyText });
 

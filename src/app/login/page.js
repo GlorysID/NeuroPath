@@ -27,8 +27,8 @@ export default function Login() {
   const t = {
     titleSignIn: lang === 'id' ? 'Temukan Potensi Kognitif Sejatimu' : 'Discover Your True Cognitive Potential',
     subSignIn: lang === 'id' 
-      ? 'Bergabunglah dengan jaringan profesional elit yang memetakan jalur saraf mereka menuju lintasan karir yang sempurna.' 
-      : 'Join the elite network of professionals mapping their neural pathways to the perfect career trajectory.',
+      ? 'Bimbingan karier untuk siswa SMA. Temukan minat dan bakatmu lewat wawancara AI, dan mulailah merancang masa depanmu.' 
+      : 'Career guidance for high school students. Discover your interests and aptitudes through an AI interview, and start shaping your future.',
     btnSignIn: lang === 'id' ? 'Buat Akun' : 'Create an Account',
     
     titleSignUp: lang === 'id' ? 'Selamat Datang, Arsitek Masa Depan' : 'Welcome Back, Future Architect',
@@ -200,7 +200,7 @@ export default function Login() {
     mass: 1,
   };
 
-  const traits = ["Creative Problem Solving", "Analytical Mind", "Visual Thinker"];
+  const traits = [lang === 'id' ? 'Pemecahan Masalah Kreatif' : 'Creative Problem Solving', lang === 'id' ? 'Pikiran Analitis' : 'Analytical Mind', lang === 'id' ? 'Berpikir Visual' : 'Visual Thinker'];
 
   return (
     <main className={styles.authContainer}>

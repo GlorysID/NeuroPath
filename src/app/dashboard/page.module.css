@@ -134,6 +134,10 @@
   grid-column: span 3;
 }
 
+.card420 {
+  min-height: 420px;
+}
+
 .tallCard {
   grid-row: span 2;
 }
@@ -159,22 +163,6 @@
   flex: 1;
 }
 
-/* === FEED CONTAINER (AI AGENT) === */
-.feedContainer {
-  margin-top: 20px;
-  max-height: 180px;
-  overflow-y: auto;
-  padding-right: 12px;
-}
-
-.feedContainer::-webkit-scrollbar {
-  width: 4px;
-}
-
-.feedContainer::-webkit-scrollbar-thumb {
-  background: var(--surface-color-dark);
-  border-radius: 10px;
-}
 
 .actionBtn {
   display: flex;
@@ -545,19 +533,157 @@
   transform: scale(1.02);
 }
 
+/* === LIVE AI AGENT CARD === */
+.agentCard {
+  gap: 0;
+}
+
+.agentHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.agentTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.agentDot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-main);
+  flex-shrink: 0;
+}
+
+.agentDot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--text-main);
+  opacity: 0;
+  animation: agentPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes agentPing {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.agentTitle {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.01em;
+}
+
+.agentStatus {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.6;
+  white-space: nowrap;
+}
+
+.agentRule {
+  height: 1px;
+  background: var(--surface-color-dark);
+  opacity: 0.8;
+  margin: 14px 0 0;
+}
+
+.agentFeed {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 16px;
+  padding-right: 6px;
+}
+
+.agentFeed::-webkit-scrollbar {
+  width: 4px;
+}
+
+.agentFeed::-webkit-scrollbar-thumb {
+  background: var(--surface-color-dark);
+  border-radius: 10px;
+}
+
+.agentPara {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin-bottom: 14px;
+  animation: feedUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.agentPara:last-child {
+  margin-bottom: 0;
+}
+
+@keyframes feedUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.agentWaiting {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 6px;
+  flex-wrap: wrap;
+}
+
+.typingDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: 0.5;
+  animation: typingBlink 1.2s infinite;
+}
+
+@keyframes typingBlink {
+  0%, 100% { opacity: 0.2; transform: translateY(0); }
+  50% { opacity: 0.8; transform: translateY(-3px); }
+}
+
+.agentWaitingText {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  opacity: 0.85;
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
   .bentoGrid {
     grid-template-columns: 1fr;
   }
   .bentoHero,
-  .span2 {
+  .span2,
+  .span3 {
     grid-column: span 1;
   }
   .bentoHero {
     flex-direction: column;
     align-items: flex-start;
     gap: 24px;
+  }
+  .dashboardWrapper {
+    padding: 20px 24px 80px 24px;
   }
 }
 
@@ -600,15 +726,80 @@
   .bentoCard {
     padding: 24px;
   }
-  
-  .modalContent {
-    margin: 20px 12px;
-    padding: 24px 20px;
+
+  .card420 {
+    min-height: 400px;
   }
   
   .clHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .greeting {
+    font-size: 1.7rem;
+  }
+
+  .bentoCard {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .bentoHero {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .card420 {
+    min-height: 380px;
+  }
+
+  .emptyState {
+    padding: 56px 20px;
+    margin: 32px auto;
+  }
+
+  .emptyState h2 {
+    font-size: 1.6rem;
+  }
+
+  .modalOverlay {
+    padding: 10px;
+  }
+
+  .modal {
+    max-height: 90vh;
+    border-radius: 20px;
+  }
+
+  .modalHeader {
+    padding: 20px 20px 14px;
+  }
+
+  .modalBody {
+    padding: 16px 20px;
+  }
+
+  .jobListing {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .jobActions {
+    flex-wrap: wrap;
+  }
+
+  .jobActions .coverLetterBtn,
+  .jobActions .applyBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .jobRecommendation {
+    padding: 12px;
   }
 }

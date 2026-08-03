@@ -15,7 +15,7 @@
 
 @media (max-width: 768px) {
   .svg {
-    margin-top: 40px;
-    transform: scale(1.15);
+    margin-top: 0;
+    transform: none;
   }
 }
