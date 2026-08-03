@@ -1,8 +1,17 @@
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
+function isLocalRouter(url) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(url);
+}
+
 const ROUTER_URL = (process.env.AI_ROUTER_URL || "").trim().replace(/\/+$/, "");
+const ROUTER_ENABLED =
+  ROUTER_URL.length > 0 &&
+  !(process.env.NODE_ENV === "production" && isLocalRouter(ROUTER_URL));
 const AI_MODEL = process.env.AI_MODEL || "llama-3.3-70b-versatile";
 const AI_ROUTER_MODEL = process.env.AI_ROUTER_MODEL || AI_MODEL;
+
+const FETCH_TIMEOUT_MS = Number(process.env.AI_FETCH_TIMEOUT_MS || 15000);
 
 async function fetchCompletion(endpoint, apiKey, model, payload) {
   const res = await fetch(endpoint, {
@@ -11,7 +20,8 @@ async function fetchCompletion(endpoint, apiKey, model, payload) {
       "Content-Type": "application/json",
       ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {})
     },
-    body: JSON.stringify({ model, ...payload })
+    body: JSON.stringify({ model, ...payload }),
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
   });
 
   const text = await res.text();
@@ -32,7 +42,7 @@ export async function callAI({ messages, maxTokens = 400, temperature = 0.7, too
   const payload = { messages, max_tokens: maxTokens, temperature, stream: false };
   if (tools) payload.tools = tools;
 
-  if (ROUTER_URL) {
+  if (ROUTER_ENABLED) {
     try {
       const result = await fetchCompletion(
         `${ROUTER_URL}/chat/completions`,
@@ -42,7 +52,7 @@ export async function callAI({ messages, maxTokens = 400, temperature = 0.7, too
       );
       return { source: "router", ...result };
     } catch (e) {
-      console.warn(`9Router unavailable (${e.message}), falling back to Groq...`);
+      console.warn(`AI router unavailable (${e.message}), falling back to Groq...`);
     }
   }
 
