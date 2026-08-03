@@ -1,124 +1,125 @@
 # NeuroPath
 
-NeuroPath is a digital career counseling (Bimbingan Konseling / BK) platform for Indonesian high-school students and school counselors. It replaces the traditional multiple-choice career test with a real-time AI voice interview that profiles cognitive dimensions, then turns the result into a personalized, actionable action plan instead of an abstract recommendation.
+NeuroPath adalah platform bimbingan konseling (BK) karier digital untuk siswa SMA dan guru BK di Indonesia. Platform ini menggantikan tes karier pilihan ganda yang kaku dengan wawancara AI berbasis suara secara real-time yang memetakan dimensi kognitif siswa, lalu menyusun hasilnya menjadi rencana aksi yang personal dan dapat dieksekusi.
 
-## Introduction
+## Pengenalan
 
-Students finishing high school are expected to choose a career path with almost no guidance. Standard career tests rely on rigid questionnaires and deliver generic results. NeuroPath conducts a natural conversation with the student, analyzes their interests, aptitude, and communication patterns across six cognitive dimensions, identifies their dominant archetype, and generates:
+Siswa yang akan lulus SMA diharapkan memilih jalur karier dengan hampir tanpa panduan. Tes karier standar mengandalkan kuesioner yang kaku dan menghasilkan rekomendasi yang umum serta abstrak. NeuroPath melakukan percakapan yang alami dengan siswa, menganalisis minat, bakat, dan pola komunikasi mereka lintas enam dimensi kognitif, mengidentifikasi arketipe utama, kemudian menghasilkan:
 
-- a personalized career roadmap with granular, trackable milestones;
-- an AI live feed with ongoing analysis of their trajectory;
-- targeted outputs such as portfolio, cover letters, and learning resources;
-- an on-chain completion certificate (ERC-721) that can be verified publicly.
+- peta jalan (roadmap) karier yang personal dengan pencapaian (milestone) yang rinci dan dapat dilacak;
+- umpan langsung (live feed) AI yang menganalisis lintasan perkembangan pengguna secara berkelanjutan;
+- keluaran yang terarah, seperti portfolio, surat lamaran (cover letter), dan sumber belajar;
+- sertifikat penyelesaian on-chain (token ERC-721) yang dapat diverifikasi oleh siapa pun.
 
-The platform is bilingual (Indonesian and English) and ships with both light and dark themes.
+Platform ini mendukung dua bahasa (Indonesia dan Inggris) serta menyediakan tema terang dan gelap.
 
-## Features
+## Fitur
 
-- **AI Career Interview** — voice/text session with speech synthesis and hands-free speech recognition; profiles 6 cognitive dimensions and an archetype.
-- **Personalized Roadmap** — expandable action plan with granular milestones and learning resources.
-- **Live AI Agent** — dashboard feed with tailored analysis of the user's progress.
-- **Counseling Journal** — notes tracking for counselors (guru BK) supporting each student.
-- **Unified Search** — a single query across journals, roadmap milestones, and live job listings.
-- **On-Demand Generation** — resume/portfolio, cover letters, and learning-material generation.
-- **Blockchain Credential** — completion certificate minted as an ERC-721 token, verifiable at `/verify`.
-- **Bilingual UI** — full Indonesian and English support with a language toggle.
+- **Wawancara Karier AI** — sesi suara atau teks dengan sintesis suara (text-to-speech) dan pengenalan suara hands-free; memetakan enam dimensi kognitif dan arketipe.
+- **Live AI Agent** — feed di dashboard dengan analisis yang disesuaikan dengan perkembangan pengguna.
+- **Roadmap Karier Personal** — rencana aksi yang dapat diperluas dengan milestone terukur dan sumber belajar.
+- **Pencarian Terpadu** — satu kueri untuk jurnal, milestone roadmap, dan daftar lowongan kerja.
+- **Hasil Sesuai Kebutuhan** — pembuatan portfolio, cover letter, dan sumber belajar secara otomatis oleh AI.
+- **Jurnal Konselor** — pencatatan untuk guru BK dalam mendampingi setiap siswa.
+- **Kredensial Blockchain** — sertifikat penyelesaian sebagai token ERC-721 yang dapat diverifikasi di `/verify`.
+- **Dwi-Bahasa** — dukungan penuh bahasa Indonesia dan Inggris dengan pengalihan bahasa.
 
-## Tech Stack
+## Teknologi
 
 - **Framework**: Next.js 16 (App Router), React 19
 - **Backend**: Next.js API routes, Firebase (Auth + Firestore)
-- **AI**: Google Generative AI and Groq via a router, streaming responses
-- **Blockchain**: Hardhat, OpenZeppelin, ERC-721, Sepolia testnet
-- **3D / Animation**: Three.js, react-three-fiber, framer-motion
+- **AI**: Google Generative AI dan Groq melalui router, dengan respons streaming
+- **Blockchain**: Hardhat, OpenZeppelin, token ERC-721 di jaringan testnet Sepolia
+- **3D dan Animasi**: Three.js, react-three-fiber, framer-motion
 
-## Installation
+## Instalasi
 
-Prerequisites: Node.js 20 or later, npm, and a Firebase project.
+Prasyarat: Node.js 20 atau lebih baru dan akun Firebase.
 
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/GlorysID/NeuroPath.git
 cd NeuroPath
 
-# 2. Install dependencies
+# 2. Instal dependensi
 npm install
 
-# 3. Create the environment file and fill in your credentials
+# 3. Buat file lingkungan dan isi kredensial Anda
 cp .env.local.example .env.local
 ```
 
-Required environment variables:
+Variabel lingkungan yang dibutuhkan:
 
-| Variable          | Description                                        |
+| Variabel          | Deskripsi                                          |
 | ----------------- | -------------------------------------------------- |
-| `GROQ_API_KEY`    | Groq API key for the AI agent routes               |
-| `AI_ROUTER_URL`   | AI router base URL                                 |
-| `AI_ROUTER_KEY`   | AI router authentication key                       |
-| `AI_ROUTER_MODEL` | Model name used by the router                      |
-| `JSEARCH_API_KEY` | JSearch API key for live job listings              |
-| `SEPOLIA_RPC_URL` | Sepolia RPC endpoint for contract interactions     |
-| `PRIVATE_KEY`     | Wallet private key for the credential minter       |
+| `GROQ_API_KEY`    | Kunci API Groq untuk route agen AI                 |
+| `AI_ROUTER_URL`   | URL dasar AI router                                |
+| `AI_ROUTER_KEY`   | Kunci autentikasi AI router                        |
+| `AI_ROUTER_MODEL` | Nama model yang digunakan oleh router              |
+| `JSEARCH_API_KEY` | Kunci API JSearch untuk lowongan kerja langsung    |
+| `SEPOLIA_RPC_URL` | Endpoint RPC Sepolia untuk interaksi kontrak       |
+| `PRIVATE_KEY`     | Kunci privat dompet untuk minter kredensial        |
 
-Firebase web configuration lives in `src/lib/firebase.js`; create a web app in your Firebase console and paste the credentials there.
+Konfigurasi web Firebase berada di `src/lib/firebase.js`. Buat aplikasi web di konsol Firebase Anda, lalu tempel kredensialnya di file tersebut.
 
-## Usage
+## Penggunaan
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:3000.
+Buka http://localhost:3000.
 
-The core flow:
+Alur inti:
 
-1. **Register / Login** — create an account with email and password.
-2. **Neural Mapping Interview** (`/interview`) — complete the AI interview in voice or text mode. The AI profiles your six cognitive dimensions and assigns an archetype.
-3. **Dashboard** (`/dashboard`) — review the cognitive map (radar chart), the live AI agent feed, and the recommended quick actions.
-4. **Career Roadmap** (`/dashboard/roadmap`) — explore milestones generated for your archetype; expand a milestone to load learning resources.
-5. **Credential** — on completing the roadmap, mint your NeuroPath certificate as an NFT and share the verification link (`/verify`) with anyone.
+1. **Login / Daftar** — buat akun dengan email dan kata sandi.
+2. **Wawancara AI (Pemetaan Saraf)** (`/interview`) — selesaikan wawancara AI dalam mode suara atau teks. AI memetakan dimensi kognitif dan menentukan arketipe.
+3. **Dashboard** (`/dashboard`) — tinjau peta kognitif (grafik radar), umpan agen AI langsung, serta tindakan cepat yang disarankan.
+4. **Roadmap Karier** (`/dashboard/roadmap`) — telusuri milestone yang dibuat sesuai arketipe; buka sebuah milestone untuk memuat sumber belajar.
+5. **Kredensial** — setelah roadmap diselesaikan, cetak sertifikat NeuroPath sebagai NFT dan bagikan tautan verifikasi (`/verify`).
 
-Other actions available from the dashboard: generate a portfolio, find AI-matched jobs with cover letters, and use the unified search across journals and listings.
+Aksi lain dari dashboard: membuat portfolio, mencari pekerjaan yang cocok beserta cover letter, dan menggunakan pencarian terpadu di jurnal serta lowongan.
 
-## Scripts
+## Script NPM
 
-| Script                                    | Purpose                                     |
-| ----------------------------------------- | ------------------------------------------- |
-| `npm run dev`                             | Start the development server                |
-| `npm run build`                           | Production build (do not run while the dev server is up) |
-| `npm run lint`                            | Run ESLint                                  |
-| `npx hardhat test`                        | Run the credential contract tests           |
-| `npx hardhat run scripts/deploy.js`       | Deploy the credential contract              |
-| `node scripts/upgrade_db.js`              | One-off Firestore migration helper          |
+| Script                              | Tujuan                              |
+| ----------------------------------- | ----------------------------------- |
+| `npm run dev`                       | Menjalankan server pengembangan     |
+| `npm run build`                     | Build untuk produksi                |
+| `npm run lint`                      | Menjalankan ESLint                  |
+| `npx hardhat test`                  | Menjalankan tes kontrak sertifikat  |
+| `npx hardhat run scripts/deploy.js` | Deploy kontrak sertifikat           |
+| `node scripts/upgrade_db.js`        | Utilitas migrasi Firestore sekali pakai |
 
-## Project Structure
+## Struktur Proyek
 
 ```
-contracts/          Solidity credential contract (ERC-721)
-scripts/            Hardhat deploy + migration scripts
-src/app/            Next.js app router (pages, layouts)
-src/app/api/        Server routes: agent, interview, search, portfolio, mint, verify, ...
-src/app/components/ UI components (toggles, charts, widgets, 3D)
-src/app/context/    Language and theme providers
-src/lib/            AI, Firebase, and job-service bindings
-public/             Static assets (images, 3D models)
+contracts/            Kontrak Solidity kredensial (ERC-721)
+scripts/              Skrip deploy dan migrasi
+src/app/              App Router Next.js (halaman, layout)
+src/app/api/          Route server: agent, interview, search, portfolio, mint, verify, ...
+src/app/components/   Komponen UI (toggle, chart, widget, 3D)
+src/app/context/      Provider bahasa dan tema
+src/lib/              Binding AI, Firebase, dan layanan pekerjaan
+public/               Aset statis (gambar, model 3D)
 ```
 
-## Credits
+## Kredit
 
-- Maintained by [GlorysID](https://github.com/GlorysID).
-- Built on Next.js, Firebase, Groq, Google Generative AI, Hardhat, and Three.js.
+- Dikelola oleh [GlorysID](https://github.com/GlorysID).
+- Dibangun dengan Next.js, Firebase, Groq, Google Generative AI, Hardhat, dan Three.js.
 
-## Documentation
+## Deploy di Vercel
 
-- `PRODUCT.md` — product spec, target users, and design principles.
-
-## Deploy on Vercel
-
-Push the repository to GitHub and import it in the Vercel dashboard, or use the CLI from the project root:
+Push ke GitHub dari branch `main`, lalu import repository di dashboard Vercel, atau deploy langsung dari CLI:
 
 ```bash
+npx vercel login
 npx vercel --prod
 ```
 
-Add the environment variables listed in the Installation section to the Vercel project settings before deploying. The project includes `vercel.json` with the required build settings.
+Tambahkan variabel lingkungan pada bagian Instalasi ke pengaturan project Vercel sebelum deploy. Proyek sudah menyertakan `vercel.json` dengan pengaturan build yang dibutuhkan.
+
+## Dokumentasi
+
+- `PRODUCT.md` — spesifikasi produk, pengguna sasaran, dan prinsip desain.
