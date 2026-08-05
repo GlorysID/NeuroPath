@@ -50,3 +50,7 @@ scratch/
 
 # unused starter scaffold
 /temp-app
+
+# firebase admin service account keys (never commit)
+*firebase-adminsdk*.json
+/service-account-key.json
