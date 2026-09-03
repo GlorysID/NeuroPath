@@ -79,10 +79,14 @@ export default function Home() {
 
   const handleAuthRedirect = (e, path) => {
     e.preventDefault();
-    if (user) {
+    const activeUser = auth.currentUser || user;
+    if (activeUser) {
       router.push(path);
     } else {
-      router.push('/login');
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('auth_redirect', path);
+      }
+      router.push(`/login?redirect=${encodeURIComponent(path)}`);
     }
   };
 
@@ -93,6 +97,7 @@ export default function Home() {
 
   const t = {
     signIn: lang === 'id' ? 'Masuk' : 'Sign In',
+    dashboard: 'Dashboard',
     title1: lang === 'id' ? 'Temukan' : 'Discover your',
     title2: lang === 'id' ? 'masa depan idealmu.' : 'ideal future.',
     subtitle: lang === 'id'
@@ -190,7 +195,11 @@ export default function Home() {
             <ThemeToggle />
             <LanguageToggle />
             <MagneticButton>
-              <Link href="/login" className={styles.loginBtn}>{t.signIn}</Link>
+              {user ? (
+                <Link href="/dashboard" className={styles.loginBtn}>{t.dashboard}</Link>
+              ) : (
+                <Link href="/login" className={styles.loginBtn}>{t.signIn}</Link>
+              )}
             </MagneticButton>
           </div>
         </nav>
@@ -466,8 +475,12 @@ export default function Home() {
                 </p>
               </div>
               <div className={styles.footerLinks}>
-                <Link href="/login" className={styles.footerLink}>{t.signIn}</Link>
-                <Link href="/interview" className={styles.footerLink}>{t.startBtn}</Link>
+                {user ? (
+                  <Link href="/dashboard" className={styles.footerLink}>{t.dashboard}</Link>
+                ) : (
+                  <Link href="/login" className={styles.footerLink}>{t.signIn}</Link>
+                )}
+                <a href="/interview" onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.footerLink}>{t.startBtn}</a>
                 <Link href="/verify" className={styles.footerLink}>{lang === 'id' ? 'Verifikasi Sertifikat' : 'Verify Certificate'}</Link>
                 <span className={styles.footerLink}>{lang === 'id' ? 'Ditenagai NeuroPath AI' : 'Powered by NeuroPath AI'}</span>
               </div>

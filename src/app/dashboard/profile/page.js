@@ -174,7 +174,10 @@ export default function ProfilePage() {
           setLoading(false);
         });
       } else {
-        router.push("/login");
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('auth_redirect', '/dashboard/profile');
+        }
+        router.push("/login?redirect=/dashboard/profile");
         setLoading(false);
       }
     });

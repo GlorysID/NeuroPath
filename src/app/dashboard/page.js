@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -97,7 +97,10 @@ export default function Dashboard() {
           setLoading(false);
         });
       } else {
-        router.push("/login");
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('auth_redirect', '/dashboard');
+        }
+        router.push("/login?redirect=/dashboard");
         setLoading(false);
       }
     });

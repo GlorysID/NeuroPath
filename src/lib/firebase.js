@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD-6taktd8PCTSUo9as4Ovbjse2lttwp2Q",
@@ -14,6 +14,15 @@ const firebaseConfig = {
 // Initialize Firebase only if it hasn't been initialized already
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+let db;
+try {
+  db = initializeFirestore(app, {
+    experimentalForceLongPolling: true
+  });
+} catch {
+  db = getFirestore(app);
+}
 
 export { app, auth, db };
+

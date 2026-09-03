@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../lib/firebase";
 import styles from "./page.module.css";
@@ -11,7 +11,7 @@ import Image from "next/image";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 
-export default function Login() {
+function LoginContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [showGoogleNameForm, setShowGoogleNameForm] = useState(false);
   const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
@@ -22,7 +22,39 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams ? searchParams.get('redirect') : null;
   const { lang } = useLanguage();
+
+  const getRedirectTarget = (hasProfile) => {
+    if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+      return redirectParam;
+    }
+    if (typeof window !== 'undefined') {
+      const stored = sessionStorage.getItem('auth_redirect');
+      if (stored && stored.startsWith('/') && !stored.startsWith('//')) {
+        sessionStorage.removeItem('auth_redirect');
+        return stored;
+      }
+    }
+    return hasProfile ? "/dashboard" : "/interview";
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser && currentUser.emailVerified) {
+        try {
+          const docRef = doc(db, "users", currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          const hasProfile = docSnap.exists() && !!docSnap.data()?.profile;
+          router.push(getRedirectTarget(hasProfile));
+        } catch {
+          router.push(getRedirectTarget(false));
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const t = {
     titleSignIn: lang === 'id' ? 'Temukan Potensi Kognitif Sejatimu' : 'Discover Your True Cognitive Potential',
@@ -96,11 +128,8 @@ export default function Login() {
           hasProfile = true;
         }
 
-        if (hasProfile) {
-          router.push("/dashboard");
-        } else {
-          router.push("/interview");
-        }
+        const target = getRedirectTarget(hasProfile);
+        router.push(target);
       } else {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
@@ -163,11 +192,8 @@ export default function Login() {
           email: user.email 
         }, { merge: true });
 
-        if (hasProfile) {
-          router.push("/dashboard");
-        } else {
-          router.push("/interview");
-        }
+        const target = getRedirectTarget(hasProfile);
+        router.push(target);
       }
     } catch (err) {
       console.error("Google Auth Error:", err);
@@ -185,7 +211,8 @@ export default function Login() {
         name: name,
         email: pendingGoogleUser.email 
       }, { merge: true });
-      router.push("/interview");
+      const target = getRedirectTarget(false);
+      router.push(target);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -471,5 +498,13 @@ export default function Login() {
         </motion.div>
       </LayoutGroup>
     </main>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<main className={styles.authContainer} />}>
+      <LoginContent />
+    </Suspense>
   );
 }

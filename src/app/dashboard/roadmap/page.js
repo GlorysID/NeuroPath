@@ -57,7 +57,10 @@ export default function RoadmapPage() {
           console.error("Error fetching profile:", error);
         }
       } else {
-        router.push("/login");
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('auth_redirect', '/dashboard/roadmap');
+        }
+        router.push("/login?redirect=/dashboard/roadmap");
       }
       setLoading(false);
     });

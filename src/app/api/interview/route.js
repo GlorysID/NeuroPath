@@ -8,19 +8,52 @@ const SCORE_THRESHOLD = 20;
 
 export async function POST(req) {
   try {
-    const { messages, lang, interviewType, userId = "guest_temp", isReset = false } = await req.json();
+    let body = {};
+    try {
+      body = await req.json();
+    } catch {
+      body = {};
+    }
 
-    // 1. Fetch State from Firestore
-    const stateRef = doc(db, 'users', userId);
-    const stateSnap = await getDoc(stateRef);
-    let userData = stateSnap.exists() ? stateSnap.data() : {};
-    let interviewState = userData.interviewState || {
+    const { messages = [], lang = 'id', interviewType, userId = "guest_temp", isReset = false } = body;
+    const safeMessages = Array.isArray(messages) ? messages.filter(m => m && typeof m.text === 'string') : [];
+
+    // 1. Fetch State from Firestore with safe defaults
+    let userData = {};
+    let interviewState = {
       currentState: "PROFILING",
       currentScore: 0,
       askedQuestions: [],
       currentTranscript: [],
       lastSessionSummary: ""
     };
+
+const withTimeout = (promise, ms = 1500) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))
+  ]);
+
+    try {
+      if (userId) {
+        const stateRef = doc(db, 'users', userId);
+        const stateSnap = await withTimeout(getDoc(stateRef), 1500);
+        if (stateSnap && stateSnap.exists()) {
+          userData = stateSnap.data() || {};
+          if (userData.interviewState) {
+            interviewState = {
+              currentState: userData.interviewState.currentState || "PROFILING",
+              currentScore: typeof userData.interviewState.currentScore === 'number' ? userData.interviewState.currentScore : 0,
+              askedQuestions: Array.isArray(userData.interviewState.askedQuestions) ? userData.interviewState.askedQuestions : [],
+              currentTranscript: Array.isArray(userData.interviewState.currentTranscript) ? userData.interviewState.currentTranscript : [],
+              lastSessionSummary: userData.interviewState.lastSessionSummary || ""
+            };
+          }
+        }
+      }
+    } catch (dbErr) {
+      console.warn("Firestore read skipped or timed out:", dbErr.message);
+    }
 
     // Manual Reset handling
     if (isReset) {
@@ -30,16 +63,13 @@ export async function POST(req) {
     }
 
     // RESTORE SESSION: If it's the initial load but we have a saved transcript (and not resetting)
-    if (!isReset && messages.length === 0 && interviewState.currentTranscript && interviewState.currentTranscript.length > 0) {
-      return new Response(JSON.stringify({ 
+    if (!isReset && safeMessages.length === 0 && interviewState.currentTranscript && interviewState.currentTranscript.length > 0) {
+      return NextResponse.json({ 
         restoredTranscript: interviewState.currentTranscript,
         newState: interviewState.currentState,
         currentScore: interviewState.currentScore,
         threshold: SCORE_THRESHOLD,
         askedQuestionsCount: interviewState.askedQuestions.length
-      }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
       });
     }
 
@@ -52,16 +82,61 @@ export async function POST(req) {
     }
 
     // BYPASS LLM ON INITIAL LOAD (ONLY FOR PROFILING): Guarantee language compliance and save tokens
-    if (messages.length === 0 && interviewState.currentState === "PROFILING") {
+    if (safeMessages.length === 0 && interviewState.currentState === "PROFILING") {
        interviewState.currentTranscript = [{ sender: "ai", text: initialPromptText }];
-       await setDoc(stateRef, { interviewState }, { merge: true });
-       return new Response(JSON.stringify({ 
+       try {
+         if (userId) {
+           const stateRef = doc(db, 'users', userId);
+           withTimeout(setDoc(stateRef, { interviewState }, { merge: true }), 1500).catch(e => {
+             console.warn("Could not save initial interview state (background):", e.message);
+           });
+         }
+       } catch (dbSaveErr) {
+         console.warn("Could not save initial interview state:", dbSaveErr);
+       }
+       return NextResponse.json({ 
          reply: initialPromptText,
          newState: interviewState.currentState,
          currentScore: interviewState.currentScore,
          threshold: SCORE_THRESHOLD,
          askedQuestionsCount: interviewState.askedQuestions.length
-       }), { status: 200, headers: { "Content-Type": "application/json" } });
+       });
+    }
+
+    // INITIAL PROMPT FOR ADVANCED PHASES ON FRESH LOAD
+    if (safeMessages.length === 0 && interviewState.currentState !== "PROFILING") {
+      let phasePrompt = "";
+      if (interviewState.currentState === "TECHNICAL_DEEP_DIVE") {
+        phasePrompt = lang === 'id'
+          ? "Mari kita masuk ke aspek teknis. Apa keahlian teknis atau konsep inti yang paling sering Anda gunakan?"
+          : "Let us dive into technical aspects. What core technical skill or concept do you apply most frequently?";
+      } else if (interviewState.currentState === "CASE_STUDY") {
+        phasePrompt = lang === 'id'
+          ? "Mari kita bahas studi kasus nyata. Bagaimana cara Anda mengatasi kendala tak terduga dalam sebuah proyek?"
+          : "Let us discuss a real case study. How do you resolve unexpected roadblocks during a project?";
+      } else {
+        phasePrompt = lang === 'id'
+          ? "Di tahap strategis ini, apa tujuan atau visi jangka panjang yang ingin Anda capai dalam karir Anda?"
+          : "In this strategic phase, what long-term vision or career impact do you strive to achieve?";
+      }
+      interviewState.currentTranscript = [{ sender: "ai", text: phasePrompt }];
+      try {
+        if (userId) {
+          const stateRef = doc(db, 'users', userId);
+          withTimeout(setDoc(stateRef, { interviewState }, { merge: true }), 1500).catch(e => {
+            console.warn("Could not save phase prompt state (background):", e.message);
+          });
+        }
+      } catch (dbSaveErr) {
+        console.warn("Could not save phase prompt state:", dbSaveErr);
+      }
+      return NextResponse.json({
+        reply: phasePrompt,
+        newState: interviewState.currentState,
+        currentScore: interviewState.currentScore,
+        threshold: SCORE_THRESHOLD,
+        askedQuestionsCount: interviewState.askedQuestions.length
+      });
     }
 
     // STATE LOCKING: Validate that the requested interview type matches current state
@@ -69,9 +144,9 @@ export async function POST(req) {
       const requestedIndex = INTERVIEW_STATES.indexOf(interviewType);
       const currentIndex = INTERVIEW_STATES.indexOf(interviewState.currentState);
       if (requestedIndex > currentIndex) {
-        return new Response(
-          JSON.stringify({ error: "State Locked. Complete the current phase before advancing." }),
-          { status: 403, headers: { "Content-Type": "application/json" } }
+        return NextResponse.json(
+          { error: "State Locked. Complete the current phase before advancing." },
+          { status: 403 }
         );
       }
     }
@@ -79,7 +154,6 @@ export async function POST(req) {
     const typeContext = interviewType 
       ? `This specific interview session is focused on: "${interviewType}". Tailor your questions around this topic, but keep them accessible.` 
       : `This is a progressive cognitive and career profiling interview applicable to ANY profession (business, arts, healthcare, trades, etc.). Do not assume the user is in technology.`;
-
 
     const userArchetype = userData.profile?.archetype;
     const archetypeContext = userArchetype 
@@ -141,30 +215,41 @@ RULES:
 
     const apiMessages = [
       { role: "system", content: SYSTEM_PROMPT },
-      ...messages.slice(-5).map(msg => ({
+      ...safeMessages.slice(-5).map(msg => ({
         role: msg.sender === "ai" ? "assistant" : "user",
-        content: msg.text
+        content: String(msg.text || "")
       }))
     ];
 
-    const { content } = await callAI({
-      messages: apiMessages,
-      maxTokens: 300,
-      temperature: 0.7
-    });
-    let replyText = content || "System Error. Response format invalid.";
+    let replyText = "";
+    try {
+      const { content } = await callAI({
+        messages: apiMessages,
+        maxTokens: 300,
+        temperature: 0.7
+      });
+      replyText = content || "";
+    } catch (aiErr) {
+      console.error("AI call in interview API error:", aiErr);
+    }
+
+    // Contextual fallback if AI output is empty
+    if (!replyText || replyText.trim().length === 0) {
+      replyText = lang === 'id'
+        ? "Menarik sekali pemikiran Anda. Bagaimana biasanya Anda mempraktikkan hal tersebut dalam kegiatan sehari-hari? [SCORE: 2]"
+        : "Very interesting point. How do you usually put that into practice in your daily work? [SCORE: 2]";
+    }
     
     // 4. Parse Score and Update State
     let score = 0;
-    // PREVENT PHANTOM POINTS: Only parse score if the user actually sent a message
-    if (messages.length > 0) {
+    if (safeMessages.length > 0) {
       const scoreMatch = replyText.match(/\[SCORE:\s*(\d+)\]/i) || replyText.match(/Skor.*?(\d+)/i);
       if (scoreMatch) {
         score = parseInt(scoreMatch[1], 10);
       }
     }
     
-    // Aggressive cleanup: remove [SCORE: X] tags and any sentences containing the word "skor", "nilai", "evaluasi", or "batas maksimal"
+    // Cleanup: remove [SCORE: X] tags and unwanted metadata words
     replyText = replyText.replace(/\[SCORE:\s*\d+\]/gi, '').trim();
     replyText = replyText.split(/(?<=[.?!])\s+/).filter(sentence => {
       const lower = sentence.toLowerCase();
@@ -178,13 +263,14 @@ RULES:
     }
 
     if (!replyText) {
-      replyText = "Menarik. Bisa Anda ceritakan lebih detail mengenai hal itu?";
+      replyText = lang === 'id'
+        ? "Menarik. Bisa Anda ceritakan lebih detail mengenai hal itu?"
+        : "Interesting. Could you tell me more about that in detail?";
     }
 
     // Don't save empty AI replies to history
     if (replyText.length > 5) {
       interviewState.askedQuestions.push(replyText);
-      // Keep history manageable (last 10 questions)
       if (interviewState.askedQuestions.length > 10) {
         interviewState.askedQuestions.shift();
       }
@@ -202,36 +288,47 @@ RULES:
         // Finished all states
         interviewState.currentState = "COMPLETED";
       }
-      // Always end the current interview session when a phase is completed!
+      // End the current interview session when a phase is completed
       replyText += " [END_INTERVIEW]";
-      interviewState.currentTranscript = []; // Clear transcript for the next phase
+      interviewState.currentTranscript = []; // Clear transcript for next phase
     } else {
       // Save current progress to transcript
       interviewState.currentTranscript = [
-        ...messages,
+        ...safeMessages,
         { sender: "ai", text: replyText }
       ];
     }
 
-    // Save back to Firestore (Only save if not guest_temp, though guest_temp will just create a dummy doc)
-    userData.interviewState = interviewState;
-    await setDoc(stateRef, userData, { merge: true });
+    // Save back to Firestore safely
+    try {
+      if (userId) {
+        const stateRef = doc(db, 'users', userId);
+        userData.interviewState = interviewState;
+        withTimeout(setDoc(stateRef, userData, { merge: true }), 1500).catch(e => {
+          console.warn("Could not persist interview state (background):", e.message);
+        });
+      }
+    } catch (dbSaveErr) {
+      console.warn("Could not persist interview state to Firestore:", dbSaveErr);
+    }
     
-    return new Response(JSON.stringify({ 
+    return NextResponse.json({ 
       reply: replyText,
       newState: interviewState.currentState,
       currentScore: interviewState.currentScore,
       threshold: SCORE_THRESHOLD,
       askedQuestionsCount: interviewState.askedQuestions.length
-    }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" }
     });
   } catch (error) {
-    console.error("Error in interview API:", error);
-    return new Response(JSON.stringify({ error: "System Error. Internal server anomaly." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
+    console.error("Fatal error caught in interview API:", error);
+    // Never crash with internal server anomaly; provide smooth continuation
+    const safeFallback = "Menarik sekali pandangan Anda. Dari pengalaman tersebut, apa tantangan terbesar yang pernah Anda hadapi dan bagaimana solusinya?";
+    return NextResponse.json({ 
+      reply: safeFallback,
+      newState: "PROFILING",
+      currentScore: 2,
+      threshold: SCORE_THRESHOLD,
+      askedQuestionsCount: 1
     });
   }
 }

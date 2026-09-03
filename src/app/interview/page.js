@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import styles from "./page.module.css";
 import { SkeletonUtils } from "three-stdlib";
 import { auth, db } from "../../lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
 function HumanoidModel({ state }) {
@@ -147,9 +148,27 @@ function InterviewRoom() {
   const modeRef = useRef("voice");
   useEffect(() => { modeRef.current = interactionMode; }, [interactionMode]);
   
-  // Create a persistent session ID for guests
-  const [sessionId] = useState(() => "guest_" + Math.random().toString(36).substring(2, 11));
-  const getUserId = () => auth.currentUser ? auth.currentUser.uid : sessionId;
+  // Enforce Authenticated Session
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const interviewStarted = useRef(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('auth_redirect', '/interview');
+        }
+        router.push('/login?redirect=/interview');
+      } else {
+        setCurrentUser(user);
+        setAuthReady(true);
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  const getUserId = () => currentUser?.uid || auth.currentUser?.uid || "";
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -424,10 +443,14 @@ function InterviewRoom() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      startInterview();
-    }, 2000);
-  }, []);
+    if (authReady && currentUser && !interviewStarted.current) {
+      interviewStarted.current = true;
+      const timer = setTimeout(() => {
+        startInterview();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [authReady, currentUser]);
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
