@@ -86,7 +86,7 @@ export default function Home() {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('auth_redirect', path);
       }
-      router.push(`/login?redirect=${encodeURIComponent(path)}`);
+      router.push('/login');
     }
   };
 
@@ -236,12 +236,12 @@ export default function Home() {
 
             <motion.div className={styles.ctaGroup} variants={fadeUpVariant}>
               <MagneticButton>
-                <a href="/interview" onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.primaryCta}>
+                <a href={user ? "/interview" : "/login"} onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.primaryCta}>
                   {t.startBtn}
                 </a>
               </MagneticButton>
               <MagneticButton>
-                <a href="/dashboard" onClick={(e) => handleAuthRedirect(e, '/dashboard')} className={styles.secondaryCta}>
+                <a href={user ? "/dashboard" : "/login"} onClick={(e) => handleAuthRedirect(e, '/dashboard')} className={styles.secondaryCta}>
                   {t.viewRoadmap}
                 </a>
               </MagneticButton>
@@ -458,7 +458,7 @@ export default function Home() {
               className={styles.finalCtaTitle}
             />
             <MagneticButton>
-              <a href="/interview" onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.finalCtaBtn}>
+              <a href={user ? "/interview" : "/login"} onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.finalCtaBtn}>
                 {t.ctaBtn}
               </a>
             </MagneticButton>
@@ -480,7 +480,7 @@ export default function Home() {
                 ) : (
                   <Link href="/login" className={styles.footerLink}>{t.signIn}</Link>
                 )}
-                <a href="/interview" onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.footerLink}>{t.startBtn}</a>
+                <a href={user ? "/interview" : "/login"} onClick={(e) => handleAuthRedirect(e, '/interview')} className={styles.footerLink}>{t.startBtn}</a>
                 <Link href="/verify" className={styles.footerLink}>{lang === 'id' ? 'Verifikasi Sertifikat' : 'Verify Certificate'}</Link>
                 <span className={styles.footerLink}>{lang === 'id' ? 'Ditenagai NeuroPath AI' : 'Powered by NeuroPath AI'}</span>
               </div>
