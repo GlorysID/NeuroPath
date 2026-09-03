@@ -37,6 +37,7 @@ $includeFiles = @(
     "README.md",
     "PRODUCT.md",
     "contractAddress.json",
+    "service-account.example.json",
     ".gitignore",
     "pack-for-jury.ps1"
 )
