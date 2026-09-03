@@ -1,125 +1,177 @@
-# NeuroPath
+# NeuroPath — Digital AI Career Counseling Platform
 
-NeuroPath adalah platform bimbingan konseling (BK) karier digital untuk siswa SMA dan guru BK di Indonesia. Platform ini menggantikan tes karier pilihan ganda yang kaku dengan wawancara AI berbasis suara secara real-time yang memetakan dimensi kognitif siswa, lalu menyusun hasilnya menjadi rencana aksi yang personal dan dapat dieksekusi.
+> **Solusi Bimbingan Konseling (BK) Karier Digital Berbasis AI & Kognitif untuk Siswa SMA/SMK Indonesia**
 
-## Pengenalan
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-orange?logo=firebase)](https://firebase.google.com/)
+[![Groq AI](https://img.shields.io/badge/Groq-Fast%20Inference-green)](https://groq.com/)
+[![Web3](https://img.shields.io/badge/Blockchain-ERC--721%20Sepolia-purple?logo=ethereum)](https://sepolia.etherscan.io/)
+[![Deployment](https://img.shields.io/badge/Deployment-Vercel%20Production-success?logo=vercel)](https://neuropath-rho.vercel.app)
 
-Siswa yang akan lulus SMA diharapkan memilih jalur karier dengan hampir tanpa panduan. Tes karier standar mengandalkan kuesioner yang kaku dan menghasilkan rekomendasi yang umum serta abstrak. NeuroPath melakukan percakapan yang alami dengan siswa, menganalisis minat, bakat, dan pola komunikasi mereka lintas enam dimensi kognitif, mengidentifikasi arketipe utama, kemudian menghasilkan:
+---
 
-- peta jalan (roadmap) karier yang personal dengan pencapaian (milestone) yang rinci dan dapat dilacak;
-- umpan langsung (live feed) AI yang menganalisis lintasan perkembangan pengguna secara berkelanjutan;
-- keluaran yang terarah, seperti portfolio, surat lamaran (cover letter), dan sumber belajar;
-- sertifikat penyelesaian on-chain (token ERC-721) yang dapat diverifikasi oleh siapa pun.
+## 🌐 Live Demo & Akses Cepat Juri
 
-Platform ini mendukung dua bahasa (Indonesia dan Inggris) serta menyediakan tema terang dan gelap.
+Juri dapat langsung menguji versi produksi yang sedang aktif tanpa perlu menginstal aplikasi secara lokal:
 
-## Fitur
+🔗 **Tautan Produksi**: [https://neuropath-rho.vercel.app](https://neuropath-rho.vercel.app)  
+📦 **Repositori GitHub**: [https://github.com/GlorysID/NeuroPath](https://github.com/GlorysID/NeuroPath)  
+📜 **Verifikasi Kredensial On-Chain**: [https://neuropath-rho.vercel.app/verify](https://neuropath-rho.vercel.app/verify)
 
-- **Wawancara Karier AI** — sesi suara atau teks dengan sintesis suara (text-to-speech) dan pengenalan suara hands-free; memetakan enam dimensi kognitif dan arketipe.
-- **Live AI Agent** — feed di dashboard dengan analisis yang disesuaikan dengan perkembangan pengguna.
-- **Roadmap Karier Personal** — rencana aksi yang dapat diperluas dengan milestone terukur dan sumber belajar.
-- **Pencarian Terpadu** — satu kueri untuk jurnal, milestone roadmap, dan daftar lowongan kerja.
-- **Hasil Sesuai Kebutuhan** — pembuatan portfolio, cover letter, dan sumber belajar secara otomatis oleh AI.
-- **Jurnal Konselor** — pencatatan untuk guru BK dalam mendampingi setiap siswa.
-- **Kredensial Blockchain** — sertifikat penyelesaian sebagai token ERC-721 yang dapat diverifikasi di `/verify`.
-- **Dwi-Bahasa** — dukungan penuh bahasa Indonesia dan Inggris dengan pengalihan bahasa.
+---
 
-## Teknologi
+## 🚀 Panduan Instalasi Lokal (Hanya 3 Langkah)
 
-- **Framework**: Next.js 16 (App Router), React 19
-- **Backend**: Next.js API routes, Firebase (Auth + Firestore)
-- **AI**: Google Generative AI dan Groq melalui router, dengan respons streaming
-- **Blockchain**: Hardhat, OpenZeppelin, token ERC-721 di jaringan testnet Sepolia
-- **3D dan Animasi**: Three.js, react-three-fiber, framer-motion
+Proyek ini telah dikonfigurasi dengan toleransi dependensi otomatis (`.npmrc`) dan konfigurasi Firebase siap pakai di `src/lib/firebase.js`.
 
-## Instalasi
+### Prasyarat
+- **Node.js**: Versi 20.x atau lebih baru (`node -v`)
+- **NPM**: Versi 10.x atau lebih baru (`npm -v`)
 
-Prasyarat: Node.js 20 atau lebih baru dan akun Firebase.
+---
 
+### Langkah 1: Pasang Dependensi
+Buka terminal di dalam folder proyek dan jalankan:
 ```bash
-# 1. Clone repository
-git clone https://github.com/GlorysID/NeuroPath.git
-cd NeuroPath
-
-# 2. Instal dependensi
 npm install
+```
+*(File `.npmrc` telah menyertakan `legacy-peer-deps=true` untuk menjamin kompatibilitas React 19 tanpa konflik).*
 
-# 3. Buat file lingkungan dan isi kredensial Anda
+---
+
+### Langkah 2: Siapkan File Lingkungan (.env.local)
+Salin template konfigurasi:
+```bash
+# Untuk Windows (Command Prompt / PowerShell):
+copy .env.local.example .env.local
+
+# Untuk Linux / macOS:
 cp .env.local.example .env.local
 ```
 
-Variabel lingkungan yang dibutuhkan:
+Buka `.env.local` dan masukkan kunci API Groq Anda:
+```env
+GROQ_API_KEY=gsk_your_groq_api_key_here
+AI_MODEL=openai/gpt-oss-120b
+```
+> 💡 *Dapatkan API Key Groq gratis dalam 1 menit di [console.groq.com/keys](https://console.groq.com/keys).*  
+> **Catatan**: Kredensial Firebase Client sudah tertanam di `src/lib/firebase.js`, sehingga Anda **tidak perlu repot membuat project Firebase baru**. Autentikasi dan database langsung berjalan!
 
-| Variabel          | Deskripsi                                          |
-| ----------------- | -------------------------------------------------- |
-| `GROQ_API_KEY`    | Kunci API Groq untuk route agen AI                 |
-| `AI_ROUTER_URL`   | URL dasar AI router                                |
-| `AI_ROUTER_KEY`   | Kunci autentikasi AI router                        |
-| `AI_ROUTER_MODEL` | Nama model yang digunakan oleh router              |
-| `JSEARCH_API_KEY` | Kunci API JSearch untuk lowongan kerja langsung    |
-| `SEPOLIA_RPC_URL` | Endpoint RPC Sepolia untuk interaksi kontrak       |
-| `PRIVATE_KEY`     | Kunci privat dompet untuk minter kredensial        |
+---
 
-Konfigurasi web Firebase berada di `src/lib/firebase.js`. Buat aplikasi web di konsol Firebase Anda, lalu tempel kredensialnya di file tersebut.
-
-## Penggunaan
-
+### Langkah 3: Jalankan Server Pengembangan
 ```bash
 npm run dev
 ```
+Buka browser Anda dan kunjungi: **[http://localhost:3000](http://localhost:3000)**
 
-Buka http://localhost:3000.
+---
 
-Alur inti:
+## 🧭 Panduan Alur Pengujian untuk Juri (Demo Flow)
 
-1. **Login / Daftar** — buat akun dengan email dan kata sandi.
-2. **Wawancara AI (Pemetaan Saraf)** (`/interview`) — selesaikan wawancara AI dalam mode suara atau teks. AI memetakan dimensi kognitif dan menentukan arketipe.
-3. **Dashboard** (`/dashboard`) — tinjau peta kognitif (grafik radar), umpan agen AI langsung, serta tindakan cepat yang disarankan.
-4. **Roadmap Karier** (`/dashboard/roadmap`) — telusuri milestone yang dibuat sesuai arketipe; buka sebuah milestone untuk memuat sumber belajar.
-5. **Kredensial** — setelah roadmap diselesaikan, cetak sertifikat NeuroPath sebagai NFT dan bagikan tautan verifikasi (`/verify`).
+Untuk mengevaluasi seluruh kapabilitas dan fitur unggulan NeuroPath, ikuti alur berikut:
 
-Aksi lain dari dashboard: membuat portfolio, mencari pekerjaan yang cocok beserta cover letter, dan menggunakan pencarian terpadu di jurnal serta lowongan.
-
-## Script NPM
-
-| Script                              | Tujuan                              |
-| ----------------------------------- | ----------------------------------- |
-| `npm run dev`                       | Menjalankan server pengembangan     |
-| `npm run build`                     | Build untuk produksi                |
-| `npm run lint`                      | Menjalankan ESLint                  |
-| `npx hardhat test`                  | Menjalankan tes kontrak sertifikat  |
-| `npx hardhat run scripts/deploy.js` | Deploy kontrak sertifikat           |
-| `node scripts/upgrade_db.js`        | Utilitas migrasi Firestore sekali pakai |
-
-## Struktur Proyek
-
-```
-contracts/            Kontrak Solidity kredensial (ERC-721)
-scripts/              Skrip deploy dan migrasi
-src/app/              App Router Next.js (halaman, layout)
-src/app/api/          Route server: agent, interview, search, portfolio, mint, verify, ...
-src/app/components/   Komponen UI (toggle, chart, widget, 3D)
-src/app/context/      Provider bahasa dan tema
-src/lib/              Binding AI, Firebase, dan layanan pekerjaan
-public/               Aset statis (gambar, model 3D)
+```mermaid
+graph LR
+    A[Landing Page] -->|Wajib Login| B[Autentikasi & Session]
+    B --> C[Wawancara Karier AI]
+    C -->|Ekstraksi Kognitif| D[Dashboard Personal]
+    D --> E[Roadmap 10-Milestone]
+    D --> F[AI Portfolio & Cover Letter]
+    D --> G[Cetak Sertifikat On-Chain]
+    G --> H[Verifikasi Web3 /verify]
 ```
 
-## Kredit
+1. **Halaman Utama (Landing Page) (`/`)**:
+   - Tampilan antarmuka modern bernuansa editorial, 3D Canvas humanoid interaktif, pengalihan tema (Terang / Gelap), dan bilingual (Indonesia / Inggris).
+   - Klik **"Mulai Wawancara AI"** atau **"Eksplorasi Fitur Dashboard"**. Sistem secara otomatis mendeteksi status sesi pengguna dan mengarahkan ke halaman Login jika belum masuk.
 
-- Dikelola oleh [GlorysID](https://github.com/GlorysID).
-- Dibangun dengan Next.js, Firebase, Groq, Google Generative AI, Hardhat, dan Three.js.
+2. **Masuk / Registrasi (`/login`)**:
+   - Masuk menggunakan Akun Google (Popup 1-klik) atau daftarkan akun email baru.
+   - Sesi terenkripsi dan persisten ditangani oleh Firebase Auth.
 
-## Deploy di Vercel
+3. **Sesi Wawancara Karier AI (`/interview`)**:
+   - **Mode Suara (Hands-Free Voice)**: Bicara langsung dengan AI menggunakan Text-to-Speech otomatis dan Web Speech API.
+   - **Mode Teks**: Ketik jawaban secara fleksibel jika mikrofon tidak tersedia.
+   - AI mengajukan pertanyaan kontekstual bertahap, mengevaluasi minat, gaya berpikir, dan memetakan 6 dimensi kognitif siswa (Analytical, Creative, Strategic, Technical, Leadership, Social).
 
-Push ke GitHub dari branch `main`, lalu import repository di dashboard Vercel, atau deploy langsung dari CLI:
+4. **Dashboard Siswa (`/dashboard`)**:
+   - **Peta Kognitif (Radar Chart SVG)**: Visualisasi grafis hasil evaluasi dimensi kognitif siswa.
+   - **Arketipe Karier Utama**: Penentuan profil dominan (contoh: *The Strategic Architect*, *Creative Visionary*).
+   - **Live AI Agent Feed**: Analisis adaptif mengenai lintasan masa depan siswa.
+   - **Generator Portfolio & Cover Letter**: Klik aksi cepat untuk membuat resume dan surat lamaran kerja terpersonalisasi via AI secara instan.
+   - **Pencarian Terpadu (Unified Search)**: Pencarian cerdas lowongan kerja, jurnal BK, dan materi pembelajaran.
 
-```bash
-npx vercel login
-npx vercel --prod
+5. **Peta Jalan Karier / Roadmap (`/dashboard/roadmap`)**:
+   - Pohon keahlian (*Skill Tree*) 10 pencapaian terstruktur dari level dasar hingga profesional.
+   - Tiap milestone memuat modul belajar, studi kasus, dan target yang dapat diselesaikan siswa.
+
+6. **Penerbitan & Verifikasi Sertifikat Blockchain (`/verify`)**:
+   - Siswa yang menyelesaikan asesmen dapat mencetak sertifikat digital permanen berbasis smart contract ERC-721 di Ethereum Sepolia Testnet.
+   - Sekolah, universitas, atau orang tua dapat memverifikasi keaslian sertifikat di rute `/verify` menggunakan Token ID atau Alamat Kontrak.
+
+---
+
+## 🏗️ Arsitektur Sistem & Inovasi Teknologi
+
+- **Resilient AI Cascade**: Menggunakan router AI dengan model default ultra-cepat `openai/gpt-oss-120b` serta mekanisme fallback multi-tier (`qwen/qwen3.8-27b` -> `openai/gpt-oss-20b` -> `groq/compound`) dan *conversational fallback* yang mencegah terjadinya HTTP 500 error jika API eksternal mengalami kendala.
+- **Low-Latency Long Polling Firestore**: Mengatasi anomali koneksi gRPC HTTP/2 Windows dengan konfigurasi `experimentalForceLongPolling: true`, menurunkan latensi sinkronisasi dari puluhan detik menjadi ~600ms.
+- **Strict Session Guarding**: Route wawancara dan dashboard diproteksi dengan verifikasi status session (`onAuthStateChanged`). Pengguna tanpa session akan diarahkan ke halaman login dengan retensi tujuan akhir.
+- **Smart Contract ERC-721 (Solidarity)**: Kontrak `NeuroPathCredential.sol` terintegrasi dengan Hardhat dan OpenZeppelin untuk menjamin bukti kelulusan yang tidak dapat dimanipulasi (*tamper-proof*).
+
+---
+
+## 📁 Struktur Berkas
+
+```
+NeuroPath/
+├── contracts/               # Smart contract Solidity (ERC-721 Token)
+│   └── NeuroPathCredential.sol
+├── public/                  # Aset statis & 3D GLB Model (xbot.glb)
+│   ├── images/
+│   └── models/
+├── scripts/                 # Skrip deployment kontrak & database
+│   ├── deploy.js
+│   └── upgrade_db.js
+├── src/
+│   ├── app/
+│   │   ├── api/             # API routes (interview, extract, portfolio, verify, mint)
+│   │   ├── components/      # Komponen UI (RadarChart, SkillTree, ThemeToggle, Model 3D)
+│   │   ├── context/         # LanguageContext (ID/EN) & ThemeContext
+│   │   ├── dashboard/       # Halaman Dashboard, Profile, & Roadmap
+│   │   ├── interview/       # Halaman Wawancara AI 3D Voice/Text
+│   │   ├── login/           # Halaman Login & Registrasi
+│   │   ├── verify/          # Halaman Verifikasi Sertifikat On-Chain
+│   │   ├── page.js          # Landing Page Utama
+│   │   └── globals.css      # Desain sistem & tema CSS
+│   └── lib/
+│       ├── ai.js            # Engine LLM Groq & router fallback
+│       ├── firebase.js      # Inisialisasi Firebase Auth & Firestore
+│       └── jobService.js    # Integrasi pencarian lowongan kerja
+├── .env.local.example       # Template variabel lingkungan
+├── .npmrc                   # Konfigurasi toleransi dependensi NPM
+├── hardhat.config.js        # Konfigurasi Hardhat Web3
+├── package.json             # Manifest dependensi & skrip
+└── README.md                # Dokumentasi utama proyek
 ```
 
-Tambahkan variabel lingkungan pada bagian Instalasi ke pengaturan project Vercel sebelum deploy. Proyek sudah menyertakan `vercel.json` dengan pengaturan build yang dibutuhkan.
+---
 
-## Dokumentasi
+## 📦 Skrip NPM yang Tersedia
 
-- `PRODUCT.md` — spesifikasi produk, pengguna sasaran, dan prinsip desain.
+| Perintah | Fungsi |
+| :--- | :--- |
+| `npm run dev` | Menjalankan server pengembangan lokal di port 3000 |
+| `npm run build` | Melakukan kompilasi produksi Next.js dengan Turbopack |
+| `npm run start` | Menjalankan bundle produksi yang telah di-build |
+| `npm run lint` | Memeriksa kepatuhan kode menggunakan ESLint |
+| `npx hardhat test` | Menjalankan pengujian unit smart contract blockchain |
+
+---
+
+## 👨‍💻 Tim Pengembang
+
+- **Pengembang**: GlorysID ([anjalisaputra@gmail.com](mailto:anjalisaputra@gmail.com))
+- **Institusi**: SMK Bina Mandiri Multimedia
+- **Lisensi**: MIT License
